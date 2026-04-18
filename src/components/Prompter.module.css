@@ -1,0 +1,74 @@
+.container {
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  z-index: 100;
+}
+
+.tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.5rem;
+}
+
+.tab {
+  background: transparent;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  color: hsl(var(--muted-foreground));
+  font-weight: 500;
+  border-radius: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.tab:hover {
+  color: hsl(var(--primary));
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.tab.active {
+  color: white;
+  background: hsl(var(--primary));
+  box-shadow: 0 4px 15px -5px hsl(var(--primary));
+}
+
+.editorArea {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: hsl(var(--primary));
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.textarea {
+  width: 100%;
+  min-height: 100px;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  color: hsl(var(--foreground));
+  font-size: 0.95rem;
+  line-height: 1.6;
+  resize: vertical;
+  transition: all 0.2s;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+.textarea:focus {
+  outline: none;
+  border-color: hsl(var(--primary));
+}
+
+.hint {
+  font-size: 0.8rem;
+  color: hsl(var(--muted-foreground));
+  font-style: italic;
+}
