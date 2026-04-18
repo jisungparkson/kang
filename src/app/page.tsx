@@ -5,23 +5,40 @@ import styles from './page.module.css';
 import Prompter from '@/components/Prompter';
 import StudentTable from '@/components/StudentTable';
 import EditorDrawer from '@/components/EditorDrawer';
-import { initialStudents, Student, generateAIContent } from '@/lib/aiService';
+import { Student, generateAIContent } from '@/lib/aiService';
+import { getStudents, updateStudentAIOutput } from '@/lib/studentService';
 import { LayoutGrid, Users, Settings, LogOut } from 'lucide-react';
 
 export default function Home() {
   const [currentCategory, setCurrentCategory] = useState('생활');
   const [promptGuideline, setPromptGuideline] = useState('학생의 관찰 내용을 바탕으로 생활기록부에 적합한 문장을 작성해 주세요. 주어(이름)는 생략하고 서술해 주세요.');
-  const [students, setStudents] = useState<Student[]>(initialStudents);
+  const [students, setStudents] = useState<Student[]>([]);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Mock "user_01" session - for now just an effect or constant
+  // Mock "user_01" session
   const userId = 'user_01';
 
-  const handleSave = (id: string, newText: string) => {
-    setStudents((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, aiOutput: newText } : s))
-    );
-    setSelectedStudent(null);
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      const data = await getStudents();
+      setStudents(data);
+      setLoading(false);
+    };
+    fetchData();
+  }, []);
+
+  const handleSave = async (id: string, newText: string) => {
+    try {
+      await updateStudentAIOutput(id, newText);
+      setStudents((prev) =>
+        prev.map((s) => (s.id === id ? { ...s, aiOutput: newText } : s))
+      );
+      setSelectedStudent(null);
+    } catch (error) {
+      alert("데이터 저장 중 오류가 발생했습니다.");
+    }
   };
 
   const handleGenerate = async (student: Student) => {
@@ -86,10 +103,16 @@ export default function Home() {
             onPromptChange={setPromptGuideline}
           />
 
-          <StudentTable
-            students={students}
-            onSelectStudent={setSelectedStudent}
-          />
+          {loading ? (
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '5rem' }}>
+              <div className="spinner">데이터 로딩 중...</div>
+            </div>
+          ) : (
+            <StudentTable
+              students={students}
+              onSelectStudent={setSelectedStudent}
+            />
+          )}
         </div>
       </section>
 

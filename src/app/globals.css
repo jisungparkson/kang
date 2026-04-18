@@ -92,3 +92,25 @@ input, textarea {
   box-shadow: var(--glass-shadow);
   border-radius: var(--radius);
 }
+
+.spinner {
+  font-weight: 500;
+  color: hsl(var(--muted-foreground));
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.spinner::before {
+  content: "";
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid hsl(var(--primary));
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
