@@ -1,72 +1,21 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@400;500;600&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
-  --background: 210 17% 98%;
-  --foreground: 0 0% 20%;
-  
-  --primary: 221 83% 53%; /* Professional Blue */
-  --primary-foreground: 210 40% 98%;
-  
-  --secondary: 210 16% 93%;
-  --secondary-foreground: 222.2 47.4% 11.2%;
-  
-  --accent: 221 70% 40%;
-  --accent-foreground: 210 40% 98%;
-  
-  --muted: 210 17% 96%;
-  --muted-foreground: 215 16% 47%;
-  
-  --border: 210 16% 93%;
-  --input: 210 16% 93%;
-  --ring: 221 83% 53%;
-  
-  --glass-bg: rgba(255, 255, 255, 0.8);
-  --glass-border: rgba(0, 0, 0, 0.08);
-  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.04);
-  
-  --radius: 1rem;
-}
-
-* {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
-}
-
-html,
-body {
-  max-width: 100vw;
-  overflow-x: hidden;
-  font-family: 'Outfit', 'Inter', sans-serif;
-  background-color: hsl(var(--background));
-  color: hsl(var(--foreground));
-  -webkit-font-smoothing: antialiased;
+  --background: #F8F9FA;
+  --foreground: #333333;
+  --primary: #3B82F6;
+  --border: #E9ECEF;
 }
 
 body {
-  background: 
-    radial-gradient(circle at 0% 0%, hsla(221, 83%, 53%, 0.03) 0%, transparent 50%),
-    radial-gradient(circle at 100% 100%, hsla(221, 83%, 53%, 0.02) 0%, transparent 50%),
-    hsl(var(--background));
-  min-height: 100vh;
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 }
 
-h1, h2, h3, h4, h5, h6 {
-  font-weight: 700;
-  letter-spacing: -0.02em;
-}
-
-button {
-  cursor: pointer;
-  font-family: inherit;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-input, textarea {
-  font-family: inherit;
-}
-
-/* Scrollbar Styling */
+/* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
 }
@@ -76,41 +25,17 @@ input, textarea {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: hsl(var(--border));
+  background: #E2E8F0;
   border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--muted-foreground));
+  background: #CBD5E1;
 }
 
+/* Glass Panel Utility */
 .glass-panel {
-  background: var(--glass-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--glass-shadow);
-  border-radius: var(--radius);
-}
-
-.spinner {
-  font-weight: 500;
-  color: hsl(var(--muted-foreground));
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.spinner::before {
-  content: "";
-  width: 1rem;
-  height: 1rem;
-  border: 2px solid hsl(var(--primary));
-  border-top-color: transparent;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(0, 0, 0, 0.05);
 }

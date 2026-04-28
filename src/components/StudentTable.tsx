@@ -1,5 +1,5 @@
 import { Student } from '@/lib/aiService';
-import styles from './StudentTable.module.css';
+import { calculateBytes } from '@/lib/utils';
 import { User, Activity, FileText, ChevronRight } from 'lucide-react';
 
 interface StudentTableProps {
@@ -9,54 +9,83 @@ interface StudentTableProps {
 
 export default function StudentTable({ students, onSelectStudent }: StudentTableProps) {
   return (
-    <div className={`${styles.container} glass-panel`}>
-      <table className={styles.table}>
-        <thead>
-          <tr>
-            <th>번호</th>
-            <th>이름</th>
-            <th>학생 정보</th>
-            <th>성취도</th>
-            <th>교사 원본 메모</th>
-            <th>AI 생성 문구</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {students.map((student, idx) => (
-            <tr key={student.id} onClick={() => onSelectStudent(student)} className={styles.row}>
-              <td className={styles.idx}>{idx + 1}</td>
-              <td className={styles.name}>
-                <div className={styles.nameBadge}>
-                  <User size={14} />
-                  {student.name}
-                </div>
-              </td>
-              <td className={styles.studentNo}>{student.studentNo}</td>
-              <td>
-                <span className={`${styles.achievement} ${student.achievement === '우수' ? styles.high : styles.mid}`}>
-                  <Activity size={12} />
-                  {student.achievement}
-                </span>
-              </td>
-              <td className={styles.note}>{student.teacherNote}</td>
-              <td className={styles.aiOutput}>
-                {student.aiOutput ? (
-                  <div className={styles.outputPreview}>
-                    <FileText size={12} />
-                    <span>{student.aiOutput}</span>
-                  </div>
-                ) : (
-                  <span className={styles.empty}>미생성</span>
-                )}
-              </td>
-              <td>
-                <ChevronRight size={18} className={styles.chevron} />
-              </td>
+    <div className="max-w-7xl mx-auto px-6">
+      <div className="bg-white border border-border rounded-2xl overflow-hidden shadow-sm">
+        <table className="w-full text-left border-collapse">
+          <thead>
+            <tr className="bg-gray-50 border-b border-border">
+              <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider w-16">번호</th>
+              <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">이름</th>
+              <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">학번/활동</th>
+              <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">성취도</th>
+              <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">교사 메모</th>
+              <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">AI 생성 문구</th>
+              <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider w-32">바이트(NEIS)</th>
+              <th className="px-6 py-4 w-12"></th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody className="divide-y divide-border">
+            {students.map((student, idx) => {
+              const bytes = calculateBytes(student.aiOutput || '');
+              return (
+                <tr 
+                  key={student.id} 
+                  onClick={() => onSelectStudent(student)} 
+                  className="hover:bg-blue-50/30 cursor-pointer transition-colors group"
+                >
+                  <td className="px-6 py-4 text-sm text-gray-400 font-medium">{idx + 1}</td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-primary">
+                        <User size={14} />
+                      </div>
+                      <span className="font-semibold text-gray-700">{student.name}</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-500 font-mono">{student.studentNo}</td>
+                  <td className="px-6 py-4">
+                    <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                      student.achievement === '우수' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'
+                    }`}>
+                      <Activity size={10} />
+                      {student.achievement}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">
+                    {student.teacherNote}
+                  </td>
+                  <td className="px-6 py-4">
+                    {student.aiOutput ? (
+                      <div className="flex items-center gap-1.5 text-sm text-gray-600">
+                        <FileText size={12} className="text-gray-400" />
+                        <span className="truncate max-w-[200px]">{student.aiOutput}</span>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-gray-300 italic">미생성</span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex flex-col gap-1">
+                      <div className="w-full bg-gray-100 h-1 rounded-full overflow-hidden">
+                        <div 
+                          className={`h-full transition-all ${bytes > 1500 ? 'bg-red-500' : 'bg-primary'}`} 
+                          style={{ width: `${Math.min((bytes / 1500) * 100, 100)}%` }}
+                        />
+                      </div>
+                      <span className={`text-[10px] font-bold ${bytes > 1500 ? 'text-red-500' : 'text-gray-400'}`}>
+                        {bytes} / 1500 Byte
+                      </span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <ChevronRight size={18} className="text-gray-300 group-hover:text-primary transition-colors" />
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
