@@ -11,7 +11,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { category, teacherNote, achievement, promptGuideline } = await request.json();
+    const { category, teacherNote, achievement, promptGuideline, studentName } = await request.json();
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -24,7 +24,7 @@ export async function POST(request: Request) {
         messages: [
           {
             role: 'system',
-            content: `${promptGuideline}\n\n[규칙]\n1. 학생의 이름(주어)을 절대 포함하지 마세요.\n2. "~함.", "~임."과 같은 간결한 개조식 문체로 작성하세요.\n3. 결과는 오직 생성된 문장만 출력하세요.`,
+            content: `${promptGuideline}\n\n[규칙]\n1. 학생 이름(${studentName})을 절대 포함하지 마세요.\n2. "~함.", "~임."과 같은 간결한 개조식 문체로 작성하세요.\n3. 결과는 오직 생성된 문장만 출력하세요.`,
           },
           {
             role: 'user',

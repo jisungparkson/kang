@@ -79,75 +79,77 @@ export default function Home() {
   );
 
   return (
-    <div className="flex h-screen bg-background text-foreground overflow-hidden">
+    <div className="flex h-screen bg-[#F2F4F6] text-[#191F28] overflow-hidden font-sans">
       {/* Sidebar */}
-      <aside className="w-64 glass-panel border-r border-border flex flex-col p-6">
-        <div className="flex items-center gap-3 mb-10">
-          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white font-bold text-sm">S</div>
-          <span className="text-xl font-bold tracking-tight">StudentAI</span>
+      <aside className="w-72 bg-white flex flex-col px-6 py-10 shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-20">
+        <div className="flex items-center gap-3 mb-12 px-2">
+          <div className="w-10 h-10 bg-[#3182F6] rounded-[12px] flex items-center justify-center text-white shadow-lg shadow-[#3182F6]/20">
+            <LayoutGrid size={22} strokeWidth={2.5} />
+          </div>
+          <span className="text-2xl font-black tracking-tight text-[#191F28]">StudentAI</span>
         </div>
 
-        <nav className="flex-1 space-y-1">
-          <a href="#" className="flex items-center gap-3 px-4 py-3 bg-white text-primary rounded-xl font-bold shadow-sm border border-border">
-            <LayoutGrid size={18} />
-            <span className="text-sm">대시보드</span>
+        <nav className="flex-1 space-y-2">
+          <a href="#" className="flex items-center gap-4 px-5 py-4 bg-[#F2F4F6] text-[#3182F6] rounded-2xl font-bold transition-all">
+            <LayoutGrid size={20} strokeWidth={2.5} />
+            <span className="text-[16px]">대시보드</span>
           </a>
-          <a href="#" className="flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-primary hover:bg-white/50 rounded-xl font-medium transition-all">
-            <Users size={18} />
-            <span className="text-sm">학급 관리</span>
+          <a href="#" className="flex items-center gap-4 px-5 py-4 text-[#8B95A1] hover:text-[#4E5968] hover:bg-[#F9FAFB] rounded-2xl font-bold transition-all">
+            <Users size={20} strokeWidth={2} />
+            <span className="text-[16px]">학급 관리</span>
           </a>
-          <a href="#" className="flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-primary hover:bg-white/50 rounded-xl font-medium transition-all">
-            <Settings size={18} />
-            <span className="text-sm">설정</span>
+          <a href="#" className="flex items-center gap-4 px-5 py-4 text-[#8B95A1] hover:text-[#4E5968] hover:bg-[#F9FAFB] rounded-2xl font-bold transition-all">
+            <Settings size={20} strokeWidth={2} />
+            <span className="text-[16px]">설정</span>
           </a>
         </nav>
 
-        <div className="pt-6 border-t border-border flex items-center justify-between">
+        <div className="pt-8 border-t border-[#F2F4F6] flex items-center justify-between px-2">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center text-primary font-bold text-xs uppercase">
-              {userId[0]}
+            <div className="w-11 h-11 rounded-full bg-[#E8F3FF] border border-[#D0E6FF] flex items-center justify-center text-[#3182F6] font-bold text-sm">
+              {userId[0].toUpperCase()}
             </div>
             <div>
-              <p className="text-xs font-bold text-gray-700">테스트 교사</p>
-              <p className="text-[10px] text-gray-400 font-mono">{userId}</p>
+              <p className="text-[15px] font-bold text-[#191F28]">테스트 교사</p>
+              <p className="text-[12px] text-[#ADB5BD] font-medium">{userId}</p>
             </div>
           </div>
-          <button className="p-2 text-gray-300 hover:text-red-500 transition-colors">
-            <LogOut size={16} />
+          <button className="p-2.5 text-[#ADB5BD] hover:text-[#F04452] transition-colors bg-[#F9FAFB] rounded-xl hover:bg-[#FFF0F0]">
+            <LogOut size={18} />
           </button>
         </div>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col overflow-hidden">
-        <header className="px-10 py-8 flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-black text-gray-900 tracking-tight">생활기록부 작성 도우미</h1>
-            <p className="text-sm text-gray-400 mt-1 font-medium">나이스(NEIS) 기준에 맞춘 AI 문장을 생성하고 관리하세요.</p>
+      <main className="flex-1 flex flex-col overflow-hidden relative">
+        <header className="px-10 py-10 flex justify-between items-end bg-[#F2F4F6]/80 backdrop-blur-md z-10">
+          <div className="space-y-1">
+            <h1 className="text-[32px] font-black text-[#191F28] tracking-tight leading-tight">생활기록부 작성</h1>
+            <p className="text-[16px] text-[#8B95A1] font-medium">AI와 함께 더 빠르고 정확하게 작성하세요.</p>
           </div>
           
-          <div className="flex items-center gap-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+          <div className="flex items-center gap-4 mb-1">
+            <div className="relative group">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#ADB5BD] group-focus-within:text-[#3182F6] transition-colors" size={18} />
               <input 
                 type="text" 
-                placeholder="학생 검색..." 
+                placeholder="학생 이름 또는 학번 검색" 
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9 pr-4 py-2 bg-white border border-border rounded-xl text-sm focus:ring-2 focus:ring-primary/20 outline-none w-64 shadow-sm"
+                className="pl-12 pr-6 py-3.5 bg-white border-none rounded-2xl text-[15px] focus:ring-2 focus:ring-[#3182F6]/20 outline-none w-80 shadow-[0_4px_20px_rgba(0,0,0,0.03)] font-medium text-[#333D4B] placeholder-[#ADB5BD]"
               />
             </div>
             <button 
               onClick={handleAddStudent}
-              className="flex items-center gap-2 px-5 py-2.5 bg-gray-900 text-white rounded-xl text-sm font-bold hover:bg-black transition-all shadow-lg active:scale-95"
+              className="flex items-center gap-2 px-7 py-3.5 bg-[#3182F6] text-white rounded-2xl text-[16px] font-bold hover:bg-[#1B64DA] transition-all shadow-lg shadow-[#3182F6]/20 active:scale-95"
             >
-              <Plus size={16} />
+              <Plus size={20} strokeWidth={3} />
               학생 추가
             </button>
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto pb-10">
+        <div className="flex-1 overflow-y-auto pb-20 custom-scrollbar scroll-smooth">
           <Prompter
             currentCategory={currentCategory}
             onCategoryChange={setCurrentCategory}
@@ -156,9 +158,9 @@ export default function Home() {
           />
 
           {loading ? (
-            <div className="flex flex-col items-center justify-center py-20 gap-4">
-              <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-              <p className="text-sm font-bold text-gray-400">데이터를 불러오는 중...</p>
+            <div className="flex flex-col items-center justify-center py-32 gap-6">
+              <div className="w-12 h-12 border-4 border-[#3182F6]/20 border-t-[#3182F6] rounded-full animate-spin" />
+              <p className="text-[16px] font-bold text-[#8B95A1]">데이터를 안전하게 불러오고 있어요</p>
             </div>
           ) : (
             <StudentTable

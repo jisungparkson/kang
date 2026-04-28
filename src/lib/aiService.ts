@@ -27,6 +27,7 @@ export const generateAIContent = async ({
       },
       body: JSON.stringify({
         category,
+        studentName: student.name,
         teacherNote: student.teacherNote,
         achievement: student.achievement,
         promptGuideline,
@@ -36,14 +37,13 @@ export const generateAIContent = async ({
     const data = await response.json();
 
     if (!response.ok) {
-      console.warn('API Route fallback to mock due to:', data.error);
-      return mockGenerateAIContent({ student, category, promptGuideline });
+      throw new Error(data.error || 'AI 생성 중 오류가 발생했습니다.');
     }
 
     return data.result;
   } catch (error) {
-    console.error('Fetch error calling internal API:', error);
-    return mockGenerateAIContent({ student, category, promptGuideline });
+    console.error('AI generation error:', error);
+    throw error;
   }
 };
 

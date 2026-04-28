@@ -9,7 +9,9 @@ export const calculateBytes = (text: string): number => {
   let bytes = 0;
   for (let i = 0; i < text.length; i++) {
     const charCode = text.charCodeAt(i);
-    if (charCode > 127) {
+    if (text[i] === '\n') {
+      bytes += 2; // 줄바꿈은 2바이트
+    } else if (charCode > 127) {
       bytes += 3; // 한글 및 특수문자
     } else {
       bytes += 1; // 영문, 숫자, 공백

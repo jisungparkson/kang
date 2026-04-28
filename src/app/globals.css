@@ -1,23 +1,29 @@
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --background: #F8F9FA;
-  --foreground: #333333;
-  --primary: #3B82F6;
-  --border: #E9ECEF;
+  --background: #F2F4F6;
+  --foreground: #191F28;
+  --primary: #3182F6;
+  --secondary: #8B95A1;
+  --white: #FFFFFF;
+  --border: #E5E8EB;
 }
 
 body {
   background-color: var(--background);
   color: var(--foreground);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -25,17 +31,27 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #E2E8F0;
+  background: #D1D6DB;
   border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #CBD5E1;
+  background: #B0B8C1;
 }
 
-/* Glass Panel Utility */
+/* Glass Panel Utility - Toss Style */
 .glass-panel {
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* Toss Button Base */
+.toss-button {
+  @apply px-6 py-3 rounded-2xl font-bold transition-all duration-200 active:scale-95 flex items-center justify-center gap-2;
+}
+
+/* Toss Card */
+.toss-card {
+  @apply bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border-none;
 }
