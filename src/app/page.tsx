@@ -9,7 +9,7 @@ import { getStudents, updateStudent, addStudent } from '@/lib/studentService';
 import { LayoutGrid, Users, Settings, LogOut, Plus, Search } from 'lucide-react';
 
 export default function Home() {
-  const [currentCategory, setCurrentCategory] = useState('생활');
+  const [currentCategory, setCurrentCategory] = useState('교과세특');
   const [promptGuideline, setPromptGuideline] = useState('학생의 관찰 내용을 바탕으로 생활기록부에 적합한 문장을 작성해 주세요. 주어(이름)는 생략하고 서술해 주세요.');
   const [students, setStudents] = useState<Student[]>([]);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
@@ -151,8 +151,6 @@ export default function Home() {
 
         <div className="flex-1 overflow-y-auto pb-20 custom-scrollbar scroll-smooth">
           <Prompter
-            currentCategory={currentCategory}
-            onCategoryChange={setCurrentCategory}
             promptGuideline={promptGuideline}
             onPromptChange={setPromptGuideline}
           />
