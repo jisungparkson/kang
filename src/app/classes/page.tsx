@@ -37,12 +37,86 @@ const initialClassStudents: ClassStudent[] = [
 export default function ClassesPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [students, setStudents] = useState<ClassStudent[]>(initialClassStudents);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingStudentId, setEditingStudentId] = useState<string | null>(null);
+  const [newStudent, setNewStudent] = useState<Omit<ClassStudent, 'id'>>({
+    studentNo: '',
+    name: '',
+    gender: '남',
+    birthDate: '',
+    phone: '',
+    note: ''
+  });
   
   const userId = 'user_01';
 
   const filteredStudents = students.filter(s => 
     s.name.includes(searchTerm) || s.studentNo.includes(searchTerm)
   );
+
+  const handleOpenAddModal = () => {
+    setEditingStudentId(null);
+    setNewStudent({
+      studentNo: '',
+      name: '',
+      gender: '남',
+      birthDate: '',
+      phone: '',
+      note: ''
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleOpenEditModal = (student: ClassStudent) => {
+    setEditingStudentId(student.id);
+    setNewStudent({
+      studentNo: student.studentNo,
+      name: student.name,
+      gender: student.gender,
+      birthDate: student.birthDate,
+      phone: student.phone,
+      note: student.note
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleDeleteStudent = (id: string) => {
+    if (window.confirm("정말로 이 학생 데이터를 삭제하시겠습니까?")) {
+      setStudents(students.filter(s => s.id !== id));
+    }
+  };
+
+  const handleSaveStudent = () => {
+    if (!newStudent.studentNo || !newStudent.name) {
+      alert('번호와 이름은 필수 입력 항목입니다.');
+      return;
+    }
+    
+    if (editingStudentId) {
+      // Update
+      setStudents(students.map(s => 
+        s.id === editingStudentId ? { ...newStudent, id: s.id } : s
+      ));
+    } else {
+      // Add
+      const studentToAdd: ClassStudent = {
+        ...newStudent,
+        id: Math.random().toString(36).substr(2, 9),
+      };
+      setStudents([...students, studentToAdd]);
+    }
+
+    setIsModalOpen(false);
+    setEditingStudentId(null);
+    setNewStudent({
+      studentNo: '',
+      name: '',
+      gender: '남',
+      birthDate: '',
+      phone: '',
+      note: ''
+    });
+  };
 
   return (
     <div className="flex h-screen bg-[#F2F4F6] text-[#191F28] overflow-hidden font-sans">
@@ -106,7 +180,10 @@ export default function ClassesPage() {
               />
             </div>
             
-            <button className="flex items-center gap-2 px-5 py-3.5 bg-[#3182F6] text-white rounded-2xl text-[15px] font-bold hover:bg-[#1B64DA] transition-all shadow-lg shadow-[#3182F6]/20 active:scale-95">
+            <button 
+              onClick={handleOpenAddModal}
+              className="flex items-center gap-2 px-5 py-3.5 bg-[#3182F6] text-white rounded-2xl text-[15px] font-bold hover:bg-[#1B64DA] transition-all shadow-lg shadow-[#3182F6]/20 active:scale-95"
+            >
               <Plus size={18} strokeWidth={3} />
               학생 추가
             </button>
@@ -159,10 +236,16 @@ export default function ClassesPage() {
                       <td className="px-6 py-5 text-sm text-[#8B95A1] max-w-[200px] truncate">{student.note}</td>
                       <td className="px-6 py-5">
                         <div className="flex items-center justify-center gap-2">
-                          <button className="p-2 text-[#ADB5BD] hover:text-[#3182F6] hover:bg-[#E8F3FF] rounded-lg transition-all">
+                          <button 
+                            onClick={() => handleOpenEditModal(student)}
+                            className="p-2 text-[#ADB5BD] hover:text-[#3182F6] hover:bg-[#E8F3FF] rounded-lg transition-all"
+                          >
                             <Edit2 size={16} />
                           </button>
-                          <button className="p-2 text-[#ADB5BD] hover:text-[#F04452] hover:bg-[#FFF0F0] rounded-lg transition-all">
+                          <button 
+                            onClick={() => handleDeleteStudent(student.id)}
+                            className="p-2 text-[#ADB5BD] hover:text-[#F04452] hover:bg-[#FFF0F0] rounded-lg transition-all"
+                          >
                             <Trash2 size={16} />
                           </button>
                         </div>
@@ -175,6 +258,113 @@ export default function ClassesPage() {
           </div>
         </div>
       </main>
+
+      {/* Modal */}
+      {isModalOpen && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200 px-6"
+          onClick={() => {
+            setIsModalOpen(false);
+            setEditingStudentId(null);
+          }}
+        >
+          <div 
+            className="bg-white rounded-[32px] w-full max-w-lg p-10 shadow-[0_20px_60px_rgba(0,0,0,0.15)] animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-[24px] font-black text-[#191F28] mb-8">
+              {editingStudentId ? '학생 정보 수정' : '학생 추가'}
+            </h2>
+            
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-[#4E5968] ml-1">번호 (필수)</label>
+                  <input 
+                    type="text" 
+                    placeholder="예: 10101"
+                    className="w-full px-5 py-3.5 bg-[#F9FAFB] border-none rounded-2xl text-[15px] focus:ring-2 focus:ring-[#3182F6]/20 outline-none font-medium text-[#191F28]"
+                    value={newStudent.studentNo}
+                    onChange={(e) => setNewStudent({...newStudent, studentNo: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-[#4E5968] ml-1">이름 (필수)</label>
+                  <input 
+                    type="text" 
+                    placeholder="예: 김민수"
+                    className="w-full px-5 py-3.5 bg-[#F9FAFB] border-none rounded-2xl text-[15px] focus:ring-2 focus:ring-[#3182F6]/20 outline-none font-medium text-[#191F28]"
+                    value={newStudent.name}
+                    onChange={(e) => setNewStudent({...newStudent, name: e.target.value})}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-[#4E5968] ml-1">성별</label>
+                  <select 
+                    className="w-full px-5 py-3.5 bg-[#F9FAFB] border-none rounded-2xl text-[15px] focus:ring-2 focus:ring-[#3182F6]/20 outline-none font-medium text-[#191F28] appearance-none"
+                    value={newStudent.gender}
+                    onChange={(e) => setNewStudent({...newStudent, gender: e.target.value})}
+                  >
+                    <option value="남">남</option>
+                    <option value="여">여</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-[#4E5968] ml-1">생년월일</label>
+                  <input 
+                    type="date" 
+                    className="w-full px-5 py-3.5 bg-[#F9FAFB] border-none rounded-2xl text-[15px] focus:ring-2 focus:ring-[#3182F6]/20 outline-none font-medium text-[#191F28]"
+                    value={newStudent.birthDate}
+                    onChange={(e) => setNewStudent({...newStudent, birthDate: e.target.value})}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-[#4E5968] ml-1">연락처</label>
+                <input 
+                  type="text" 
+                  placeholder="예: 010-0000-0000"
+                  className="w-full px-5 py-3.5 bg-[#F9FAFB] border-none rounded-2xl text-[15px] focus:ring-2 focus:ring-[#3182F6]/20 outline-none font-medium text-[#191F28]"
+                  value={newStudent.phone}
+                  onChange={(e) => setNewStudent({...newStudent, phone: e.target.value})}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-[#4E5968] ml-1">특이사항</label>
+                <textarea 
+                  placeholder="참고할 내용을 입력하세요."
+                  className="w-full px-5 py-3.5 bg-[#F9FAFB] border-none rounded-2xl text-[15px] focus:ring-2 focus:ring-[#3182F6]/20 outline-none font-medium text-[#191F28] min-h-[100px] resize-none"
+                  value={newStudent.note}
+                  onChange={(e) => setNewStudent({...newStudent, note: e.target.value})}
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 mt-10">
+              <button 
+                onClick={() => {
+                  setIsModalOpen(false);
+                  setEditingStudentId(null);
+                }}
+                className="flex-1 py-4 bg-[#F2F4F6] text-[#4E5968] rounded-2xl text-[16px] font-bold hover:bg-[#E5E8EB] transition-all"
+              >
+                취소
+              </button>
+              <button 
+                onClick={handleSaveStudent}
+                className="flex-1 py-4 bg-[#3182F6] text-white rounded-2xl text-[16px] font-bold hover:bg-[#1B64DA] transition-all shadow-lg shadow-[#3182F6]/20"
+              >
+                저장
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
