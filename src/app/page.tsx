@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import Prompter from '@/components/Prompter';
 import StudentTable from '@/components/StudentTable';
 import EditorDrawer from '@/components/EditorDrawer';
@@ -90,18 +91,18 @@ export default function Home() {
         </div>
 
         <nav className="flex-1 space-y-2">
-          <a href="#" className="flex items-center gap-4 px-5 py-4 bg-[#F2F4F6] text-[#3182F6] rounded-2xl font-bold transition-all">
+          <Link href="/" className="flex items-center gap-4 px-5 py-4 bg-[#F2F4F6] text-[#3182F6] rounded-2xl font-bold transition-all">
             <LayoutGrid size={20} strokeWidth={2.5} />
             <span className="text-[16px]">대시보드</span>
-          </a>
-          <a href="#" className="flex items-center gap-4 px-5 py-4 text-[#8B95A1] hover:text-[#4E5968] hover:bg-[#F9FAFB] rounded-2xl font-bold transition-all">
+          </Link>
+          <Link href="/classes" className="flex items-center gap-4 px-5 py-4 text-[#8B95A1] hover:text-[#4E5968] hover:bg-[#F9FAFB] rounded-2xl font-bold transition-all">
             <Users size={20} strokeWidth={2} />
             <span className="text-[16px]">학급 관리</span>
-          </a>
-          <a href="#" className="flex items-center gap-4 px-5 py-4 text-[#8B95A1] hover:text-[#4E5968] hover:bg-[#F9FAFB] rounded-2xl font-bold transition-all">
+          </Link>
+          <Link href="/settings" className="flex items-center gap-4 px-5 py-4 text-[#8B95A1] hover:text-[#4E5968] hover:bg-[#F9FAFB] rounded-2xl font-bold transition-all">
             <Settings size={20} strokeWidth={2} />
             <span className="text-[16px]">설정</span>
-          </a>
+          </Link>
         </nav>
 
         <div className="pt-8 border-t border-[#F2F4F6] flex items-center justify-between px-2">

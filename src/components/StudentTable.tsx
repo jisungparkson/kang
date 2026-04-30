@@ -16,20 +16,17 @@ export default function StudentTable({ students, onSelectStudent }: StudentTable
             <tr className="border-b border-[#F2F4F6]">
               <th className="px-6 py-5 text-xs font-bold text-[#8B95A1] uppercase tracking-wider w-16 text-center">번호</th>
               <th className="px-6 py-5 text-xs font-bold text-[#8B95A1] uppercase tracking-wider">이름</th>
-              <th className="px-6 py-5 text-xs font-bold text-[#8B95A1] uppercase tracking-wider">학번/활동</th>
-              <th className="px-6 py-5 text-xs font-bold text-[#8B95A1] uppercase tracking-wider text-center">성취도</th>
-              <th className="px-6 py-5 text-xs font-bold text-[#8B95A1] uppercase tracking-wider">교사 메모</th>
-              <th className="px-6 py-5 text-xs font-bold text-[#8B95A1] uppercase tracking-wider">AI 생성 문구</th>
-              <th className="px-6 py-5 text-xs font-bold text-[#8B95A1] uppercase tracking-wider w-32">바이트(NEIS)</th>
-              <th className="px-6 py-5 w-12 text-center">
-                <ChevronRight size={16} className="text-transparent" />
-              </th>
+              <th className="px-6 py-5 text-xs font-bold text-[#8B95A1] uppercase tracking-wider">학생 활동</th>
+              <th className="px-6 py-5 text-xs font-bold text-[#8B95A1] uppercase tracking-wider text-center">성취도(선택사항)</th>
+              <th className="px-6 py-5 text-xs font-bold text-[#8B95A1] uppercase tracking-wider">교사 작성</th>
+              <th className="px-6 py-5 text-xs font-bold text-[#8B95A1] uppercase tracking-wider">교과 세특</th>
+              <th className="px-6 py-5 text-xs font-bold text-[#8B95A1] uppercase tracking-wider w-32">나이스 바이트수</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#F9FAFB]">
             {students.length === 0 ? (
               <tr>
-                <td colSpan={8} className="py-20 text-center text-[#8B95A1] font-medium">
+                <td colSpan={7} className="py-20 text-center text-[#8B95A1] font-medium">
                   학생 데이터가 없습니다.
                 </td>
               </tr>
@@ -90,9 +87,6 @@ export default function StudentTable({ students, onSelectStudent }: StudentTable
                           {bytes} / 1500 Byte
                         </span>
                       </div>
-                    </td>
-                    <td className="px-6 py-5 text-center">
-                      <ChevronRight size={20} className="text-[#D1D6DB] group-hover:text-[#3182F6] transition-transform group-hover:translate-x-1" />
                     </td>
                   </tr>
                 );
