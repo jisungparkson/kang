@@ -13,7 +13,8 @@ import {
   Download, 
   Edit2, 
   Trash2,
-  MoreVertical
+  MoreVertical,
+  ClipboardList
 } from 'lucide-react';
 
 interface ClassStudent {
@@ -47,6 +48,9 @@ export default function ClassesPage() {
     phone: '',
     note: ''
   });
+  
+  const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
+  const [bulkText, setBulkText] = useState('');
   
   const userId = 'user_01';
 
@@ -118,6 +122,36 @@ export default function ClassesPage() {
     });
   };
 
+  const handleBulkPaste = () => {
+    if (!bulkText.trim()) {
+      alert('데이터를 입력해 주세요.');
+      return;
+    }
+
+    const lines = bulkText.trim().split('\n');
+    const newStudentsData: ClassStudent[] = lines.map(line => {
+      const fields = line.split('\t');
+      return {
+        id: Math.random().toString(36).substr(2, 9),
+        studentNo: fields[0]?.trim() || '',
+        name: fields[1]?.trim() || '',
+        gender: fields[2]?.trim() || '남',
+        birthDate: fields[3]?.trim() || '',
+        phone: fields[4]?.trim() || '',
+        note: fields[5]?.trim() || ''
+      };
+    }).filter(s => s.studentNo || s.name);
+
+    if (newStudentsData.length === 0) {
+      alert('추가할 학생 데이터가 없습니다. 형식을 확인해 주세요.');
+      return;
+    }
+
+    setStudents(prev => [...prev, ...newStudentsData]);
+    setBulkText('');
+    setIsBulkModalOpen(false);
+  };
+
   return (
     <div className="flex h-screen bg-[#F2F4F6] text-[#191F28] overflow-hidden font-sans">
       {/* Sidebar */}
@@ -187,9 +221,12 @@ export default function ClassesPage() {
               <Plus size={18} strokeWidth={3} />
               학생 추가
             </button>
-            <button className="flex items-center gap-2 px-5 py-3.5 bg-white text-[#4E5968] border border-[#E5E8EB] rounded-2xl text-[15px] font-bold hover:bg-[#F9FAFB] transition-all active:scale-95">
-              <Upload size={18} />
-              엑셀 업로드
+            <button 
+              onClick={() => setIsBulkModalOpen(true)}
+              className="flex items-center gap-2 px-5 py-3.5 bg-white text-[#4E5968] border border-[#E5E8EB] rounded-2xl text-[15px] font-bold hover:bg-[#F9FAFB] transition-all active:scale-95"
+            >
+              <ClipboardList size={18} className="text-[#3182F6]" />
+              📋 일괄 붙여넣기
             </button>
             <button className="flex items-center gap-2 px-5 py-3.5 bg-white text-[#4E5968] border border-[#E5E8EB] rounded-2xl text-[15px] font-bold hover:bg-[#F9FAFB] transition-all active:scale-95">
               <Download size={18} />
@@ -360,6 +397,64 @@ export default function ClassesPage() {
                 className="flex-1 py-4 bg-[#3182F6] text-white rounded-2xl text-[16px] font-bold hover:bg-[#1B64DA] transition-all shadow-lg shadow-[#3182F6]/20"
               >
                 저장
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Paste Modal */}
+      {isBulkModalOpen && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200 px-6"
+          onClick={() => {
+            setIsBulkModalOpen(false);
+            setBulkText('');
+          }}
+        >
+          <div 
+            className="bg-white rounded-[32px] w-full max-w-2xl p-10 shadow-[0_20px_60px_rgba(0,0,0,0.15)] animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-[#E8F3FF] rounded-xl flex items-center justify-center text-[#3182F6]">
+                <ClipboardList size={22} />
+              </div>
+              <h2 className="text-[24px] font-black text-[#191F28]">학생 일괄 추가</h2>
+            </div>
+            
+            <p className="text-[15px] text-[#4E5968] mb-6 leading-relaxed bg-[#F9FAFB] p-4 rounded-2xl border border-[#F2F4F6]">
+              <span className="font-bold text-[#3182F6]">💡 안내:</span> 엑셀이나 나이스(NEIS)에서 학생 명단(번호, 이름, 성별 등)을 복사(Ctrl+C)하여 아래에 붙여넣기(Ctrl+V) 하세요.
+            </p>
+            
+            <div className="space-y-4">
+              <textarea 
+                rows={10}
+                placeholder="여기에 데이터를 붙여넣으세요.&#10;(형식: 번호 [TAB] 이름 [TAB] 성별 [TAB] 생년월일 [TAB] 연락처 [TAB] 특이사항)"
+                className="w-full px-6 py-5 bg-[#F9FAFB] border-2 border-transparent focus:border-[#3182F6]/20 focus:bg-white rounded-[24px] text-[15px] outline-none font-mono text-[#191F28] shadow-inner transition-all resize-none"
+                value={bulkText}
+                onChange={(e) => setBulkText(e.target.value)}
+              />
+              <p className="text-[12px] text-[#ADB5BD] ml-2">
+                * 각 줄은 학생 한 명이며, 각 항목은 탭(Tab)으로 구분되어야 합니다.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3 mt-10">
+              <button 
+                onClick={() => {
+                  setIsBulkModalOpen(false);
+                  setBulkText('');
+                }}
+                className="flex-1 py-4 bg-[#F2F4F6] text-[#4E5968] rounded-2xl text-[16px] font-bold hover:bg-[#E5E8EB] transition-all"
+              >
+                취소
+              </button>
+              <button 
+                onClick={handleBulkPaste}
+                className="flex-1 py-4 bg-[#3182F6] text-white rounded-2xl text-[16px] font-bold hover:bg-[#1B64DA] transition-all shadow-lg shadow-[#3182F6]/20 active:scale-95"
+              >
+                추가하기
               </button>
             </div>
           </div>
