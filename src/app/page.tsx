@@ -24,7 +24,7 @@ export default function Home() {
 
   const handleSave = async (id: string, updates: Partial<Student>) => {
     try {
-      updateStudent(id, updates);
+      await updateStudent(id, updates);
       setSelectedStudent(null);
     } catch (error) {
       alert("데이터 저장 중 오류가 발생했습니다.");
@@ -52,7 +52,7 @@ export default function Home() {
     };
 
     try {
-      addStudent(newStudent);
+      await addStudent(newStudent);
     } catch (error) {
       alert("학생 추가 중 오류가 발생했습니다.");
     }

@@ -1,60 +1,75 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Student, initialStudents } from '@/lib/aiService';
-
-const STORAGE_KEY = 'kang_students';
+import { useState, useEffect, useCallback } from 'react';
+import { Student } from '@/lib/aiService';
+import { 
+  getStudents, 
+  addStudent as addStudentToDB, 
+  updateStudent as updateStudentInDB, 
+  deleteStudent as deleteStudentFromDB 
+} from '@/lib/studentService';
 
 export function useStudents() {
   const [students, setStudents] = useState<Student[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load from localStorage on mount
-  useEffect(() => {
-    const savedData = localStorage.getItem(STORAGE_KEY);
-    if (savedData) {
-      try {
-        setStudents(JSON.parse(savedData));
-      } catch (e) {
-        console.error('Failed to parse students from localStorage', e);
-        setStudents(initialStudents);
-      }
-    } else {
-      setStudents(initialStudents);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(initialStudents));
+  const fetchStudents = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const data = await getStudents();
+      setStudents(data);
+    } catch (error) {
+      console.error('Failed to fetch students:', error);
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   }, []);
 
-  // Save to localStorage whenever students change
-  const saveToStorage = (newStudents: Student[]) => {
-    setStudents(newStudents);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(newStudents));
+  // Load from Firebase on mount
+  useEffect(() => {
+    fetchStudents();
+  }, [fetchStudents]);
+
+  const addStudent = async (studentData: Omit<Student, 'id'>) => {
+    try {
+      const newStudent = await addStudentToDB(studentData);
+      setStudents(prev => [...prev, newStudent]);
+      return newStudent;
+    } catch (error) {
+      console.error('Failed to add student:', error);
+      throw error;
+    }
   };
 
-  const addStudent = (student: Omit<Student, 'id'>) => {
-    const newStudent: Student = {
-      ...student,
-      id: Math.random().toString(36).substr(2, 9),
-    };
-    const newStudents = [...students, newStudent];
-    saveToStorage(newStudents);
-    return newStudent;
+  const updateStudent = async (id: string, updates: Partial<Student>) => {
+    try {
+      await updateStudentInDB(id, updates);
+      setStudents(prev => prev.map(s => (s.id === id ? { ...s, ...updates } : s)));
+    } catch (error) {
+      console.error('Failed to update student:', error);
+      throw error;
+    }
   };
 
-  const updateStudent = (id: string, updates: Partial<Student>) => {
-    const newStudents = students.map((s) => (s.id === id ? { ...s, ...updates } : s));
-    saveToStorage(newStudents);
+  const deleteStudent = async (id: string) => {
+    try {
+      await deleteStudentFromDB(id);
+      setStudents(prev => prev.filter(s => s.id !== id));
+    } catch (error) {
+      console.error('Failed to delete student:', error);
+      throw error;
+    }
   };
 
-  const deleteStudent = (id: string) => {
-    const newStudents = students.filter((s) => s.id !== id);
-    saveToStorage(newStudents);
-  };
-
-  const bulkAddStudents = (newStudentsToAdd: Student[]) => {
-    const newStudents = [...students, ...newStudentsToAdd];
-    saveToStorage(newStudents);
+  const bulkAddStudents = async (newStudentsToAdd: Omit<Student, 'id'>[]) => {
+    try {
+      // For simplicity using Promise.all, for large datasets writeBatch would be better
+      const results = await Promise.all(newStudentsToAdd.map(s => addStudentToDB(s)));
+      setStudents(prev => [...prev, ...results]);
+    } catch (error) {
+      console.error('Failed to bulk add students:', error);
+      throw error;
+    }
   };
 
   return {
@@ -64,6 +79,6 @@ export function useStudents() {
     updateStudent,
     deleteStudent,
     bulkAddStudents,
-    setStudents: saveToStorage, // Allow direct setting if needed
+    refreshStudents: fetchStudents,
   };
 }

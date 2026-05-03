@@ -77,41 +77,49 @@ export default function ClassesPage() {
     setIsModalOpen(true);
   };
 
-  const handleDeleteStudent = (id: string) => {
+  const handleDeleteStudent = async (id: string) => {
     if (window.confirm("정말로 이 학생 데이터를 삭제하시겠습니까?")) {
-      deleteStudent(id);
+      try {
+        await deleteStudent(id);
+      } catch (error) {
+        alert("삭제 중 오류가 발생했습니다.");
+      }
     }
   };
 
-  const handleSaveStudent = () => {
+  const handleSaveStudent = async () => {
     if (!newStudent.studentNo || !newStudent.name) {
       alert('번호와 이름은 필수 입력 항목입니다.');
       return;
     }
     
-    if (editingStudentId) {
-      // Update
-      updateStudent(editingStudentId, newStudent);
-    } else {
-      // Add
-      addStudent(newStudent);
-    }
+    try {
+      if (editingStudentId) {
+        // Update
+        await updateStudent(editingStudentId, newStudent);
+      } else {
+        // Add
+        await addStudent(newStudent);
+      }
 
-    setIsModalOpen(false);
-    setEditingStudentId(null);
-    setNewStudent({
-      studentNo: '',
-      name: '',
-      gender: '남',
-      birthDate: '',
-      phone: '',
-      note: '',
-      achievement: '보통',
-      teacherNote: '',
-    });
+      setIsModalOpen(false);
+      setEditingStudentId(null);
+      setNewStudent({
+        studentNo: '',
+        name: '',
+        gender: '남',
+        birthDate: '',
+        phone: '',
+        note: '',
+        achievement: '보통',
+        teacherNote: '',
+      });
+    } catch (error) {
+      alert("데이터 저장 중 오류가 발생했습니다.");
+    }
   };
 
-  const handleBulkPaste = () => {
+  const handleBulkPaste = async () => {
     if (!bulkText.trim()) {
       alert('데이터를 입력해 주세요.');
       return;
@@ -120,7 +128,7 @@ export default function ClassesPage() {
     const lines = bulkText.trim().split('\n').filter(line => line.trim() !== '');
     const hasTabs = bulkText.includes('\t');
     
-    let newStudentsData: Student[] = [];
+    let newStudentsData: Omit<Student, 'id'>[] = [];
 
     if (!hasTabs) {
       // Case A: Names Only
@@ -131,7 +139,6 @@ export default function ClassesPage() {
       }
 
       newStudentsData = lines.map((name, index) => ({
-        id: Math.random().toString(36).substr(2, 9),
         studentNo: (lastNo + index + 1).toString(),
         name: name.trim(),
         gender: '-',
@@ -146,7 +153,6 @@ export default function ClassesPage() {
       newStudentsData = lines.map(line => {
         const fields = line.split('\t');
         return {
-          id: Math.random().toString(36).substr(2, 9),
           studentNo: fields[0]?.trim() || '',
           name: fields[1]?.trim() || '',
           gender: fields[2]?.trim() || '남',
@@ -164,9 +170,13 @@ export default function ClassesPage() {
       return;
     }
 
-    bulkAddStudents(newStudentsData);
-    setBulkText('');
-    setIsBulkModalOpen(false);
+    try {
+      await bulkAddStudents(newStudentsData);
+      setBulkText('');
+      setIsBulkModalOpen(false);
+    } catch (error) {
+      alert("일괄 추가 중 오류가 발생했습니다.");
+    }
   };
 
   return (
