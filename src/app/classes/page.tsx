@@ -14,7 +14,9 @@ import {
   Edit2, 
   Trash2,
   MoreVertical,
-  ClipboardList
+  ClipboardList,
+  Check,
+  X
 } from 'lucide-react';
 import { useStudents } from '@/hooks/useStudents';
 import { Student } from '@/lib/aiService';
@@ -27,6 +29,16 @@ export default function ClassesPage() {
   const { students, addStudent, updateStudent, deleteStudent, bulkAddStudents } = useStudents();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingStudentId, setEditingStudentId] = useState<string | null>(null);
+  const [editFormData, setEditFormData] = useState<Omit<Student, 'id'>>({
+    studentNo: '',
+    name: '',
+    gender: '남',
+    birthDate: '',
+    phone: '',
+    note: '',
+    achievement: '보통',
+    teacherNote: '',
+  });
   const [newStudent, setNewStudent] = useState<Omit<Student, 'id'>>({
     studentNo: '',
     name: '',
@@ -64,7 +76,7 @@ export default function ClassesPage() {
 
   const handleOpenEditModal = (student: Student) => {
     setEditingStudentId(student.id);
-    setNewStudent({
+    setEditFormData({
       studentNo: student.studentNo,
       name: student.name,
       gender: student.gender,
@@ -74,7 +86,25 @@ export default function ClassesPage() {
       achievement: student.achievement || '보통',
       teacherNote: student.teacherNote || '',
     });
-    setIsModalOpen(true);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingStudentId(null);
+  };
+
+  const handleSaveInlineEdit = async () => {
+    if (!editingStudentId) return;
+    if (!editFormData.studentNo || !editFormData.name) {
+      alert('번호와 이름은 필수 입력 항목입니다.');
+      return;
+    }
+
+    try {
+      await updateStudent(editingStudentId, editFormData);
+      setEditingStudentId(null);
+    } catch (error) {
+      alert("데이터 저장 중 오류가 발생했습니다.");
+    }
   };
 
   const handleDeleteStudent = async (id: string) => {
@@ -284,38 +314,113 @@ export default function ClassesPage() {
                     </td>
                   </tr>
                 ) : (
-                  filteredStudents.map((student) => (
-                    <tr key={student.id} className="hover:bg-[#F9FAFB]/80 transition-colors group">
-                      <td className="px-6 py-5 text-sm text-[#8B95A1] font-medium text-center">{student.studentNo}</td>
-                      <td className="px-6 py-5 font-bold text-[#191F28] text-[15px]">{student.name}</td>
-                      <td className="px-6 py-5 text-center">
-                        <span className={`px-2.5 py-1 rounded-lg text-xs font-bold ${
-                          student.gender === '남' ? 'bg-[#E8F3FF] text-[#3182F6]' : 'bg-[#FFF0F0] text-[#F04452]'
-                        }`}>
-                          {student.gender}
-                        </span>
-                      </td>
-                      <td className="px-6 py-5 text-sm text-[#4E5968]">{student.birthDate}</td>
-                      <td className="px-6 py-5 text-sm text-[#4E5968]">{student.phone}</td>
-                      <td className="px-6 py-5 text-sm text-[#8B95A1] max-w-[200px] truncate">{student.note}</td>
-                      <td className="px-6 py-5">
-                        <div className="flex items-center justify-center gap-2">
-                          <button 
-                            onClick={() => handleOpenEditModal(student)}
-                            className="p-2 text-[#ADB5BD] hover:text-[#3182F6] hover:bg-[#E8F3FF] rounded-lg transition-all"
-                          >
-                            <Edit2 size={16} />
-                          </button>
-                          <button 
-                            onClick={() => handleDeleteStudent(student.id)}
-                            className="p-2 text-[#ADB5BD] hover:text-[#F04452] hover:bg-[#FFF0F0] rounded-lg transition-all"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
+                  filteredStudents.map((student) => {
+                    const isEditing = editingStudentId === student.id;
+                    
+                    if (isEditing) {
+                      return (
+                        <tr key={student.id} className="bg-[#F2F4F6]/30">
+                          <td className="px-3 py-4 text-center">
+                            <input 
+                              className="w-full px-2 py-2 bg-white border border-[#E5E8EB] rounded-lg text-sm text-center focus:ring-2 focus:ring-[#3182F6]/20 outline-none font-medium"
+                              value={editFormData.studentNo}
+                              onChange={(e) => setEditFormData({...editFormData, studentNo: e.target.value})}
+                            />
+                          </td>
+                          <td className="px-3 py-4">
+                            <input 
+                              className="w-full px-2 py-2 bg-white border border-[#E5E8EB] rounded-lg text-sm focus:ring-2 focus:ring-[#3182F6]/20 outline-none font-bold"
+                              value={editFormData.name}
+                              onChange={(e) => setEditFormData({...editFormData, name: e.target.value})}
+                            />
+                          </td>
+                          <td className="px-3 py-4 text-center">
+                            <select 
+                              className="w-full px-1 py-2 bg-white border border-[#E5E8EB] rounded-lg text-xs font-bold focus:ring-2 focus:ring-[#3182F6]/20 outline-none"
+                              value={editFormData.gender}
+                              onChange={(e) => setEditFormData({...editFormData, gender: e.target.value})}
+                            >
+                              <option value="남">남</option>
+                              <option value="여">여</option>
+                            </select>
+                          </td>
+                          <td className="px-3 py-4">
+                            <input 
+                              type="date"
+                              className="w-full px-2 py-2 bg-white border border-[#E5E8EB] rounded-lg text-xs focus:ring-2 focus:ring-[#3182F6]/20 outline-none"
+                              value={editFormData.birthDate}
+                              onChange={(e) => setEditFormData({...editFormData, birthDate: e.target.value})}
+                            />
+                          </td>
+                          <td className="px-3 py-4">
+                            <input 
+                              className="w-full px-2 py-2 bg-white border border-[#E5E8EB] rounded-lg text-xs focus:ring-2 focus:ring-[#3182F6]/20 outline-none"
+                              value={editFormData.phone}
+                              onChange={(e) => setEditFormData({...editFormData, phone: e.target.value})}
+                            />
+                          </td>
+                          <td className="px-3 py-4">
+                            <input 
+                              className="w-full px-2 py-2 bg-white border border-[#E5E8EB] rounded-lg text-xs focus:ring-2 focus:ring-[#3182F6]/20 outline-none"
+                              value={editFormData.note}
+                              onChange={(e) => setEditFormData({...editFormData, note: e.target.value})}
+                            />
+                          </td>
+                          <td className="px-3 py-4">
+                            <div className="flex items-center justify-center gap-1.5">
+                              <button 
+                                onClick={handleSaveInlineEdit}
+                                className="p-2 text-[#3182F6] hover:bg-[#E8F3FF] rounded-lg transition-all"
+                                title="저장"
+                              >
+                                <Check size={18} strokeWidth={3} />
+                              </button>
+                              <button 
+                                onClick={handleCancelEdit}
+                                className="p-2 text-[#8B95A1] hover:bg-[#F2F4F6] rounded-lg transition-all"
+                                title="취소"
+                              >
+                                <X size={18} strokeWidth={3} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    }
+
+                    return (
+                      <tr key={student.id} className="hover:bg-[#F9FAFB]/80 transition-colors group">
+                        <td className="px-6 py-5 text-sm text-[#8B95A1] font-medium text-center">{student.studentNo}</td>
+                        <td className="px-6 py-5 font-bold text-[#191F28] text-[15px]">{student.name}</td>
+                        <td className="px-6 py-5 text-center">
+                          <span className={`px-2.5 py-1 rounded-lg text-xs font-bold ${
+                            student.gender === '남' ? 'bg-[#E8F3FF] text-[#3182F6]' : 'bg-[#FFF0F0] text-[#F04452]'
+                          }`}>
+                            {student.gender}
+                          </span>
+                        </td>
+                        <td className="px-6 py-5 text-sm text-[#4E5968]">{student.birthDate}</td>
+                        <td className="px-6 py-5 text-sm text-[#4E5968]">{student.phone}</td>
+                        <td className="px-6 py-5 text-sm text-[#8B95A1] max-w-[200px] truncate">{student.note}</td>
+                        <td className="px-6 py-5">
+                          <div className="flex items-center justify-center gap-2">
+                            <button 
+                              onClick={() => handleOpenEditModal(student)}
+                              className="p-2 text-[#ADB5BD] hover:text-[#3182F6] hover:bg-[#E8F3FF] rounded-lg transition-all"
+                            >
+                              <Edit2 size={16} />
+                            </button>
+                            <button 
+                              onClick={() => handleDeleteStudent(student.id)}
+                              className="p-2 text-[#ADB5BD] hover:text-[#F04452] hover:bg-[#FFF0F0] rounded-lg transition-all"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>
@@ -337,7 +442,7 @@ export default function ClassesPage() {
             onClick={(e) => e.stopPropagation()}
           >
             <h2 className="text-[24px] font-black text-[#191F28] mb-8">
-              {editingStudentId ? '학생 정보 수정' : '학생 추가'}
+              학생 추가
             </h2>
             
             <div className="space-y-6">
