@@ -5,50 +5,26 @@ import Link from 'next/link';
 import Prompter from '@/components/Prompter';
 import StudentTable from '@/components/StudentTable';
 import EditorDrawer from '@/components/EditorDrawer';
-import { Student, generateAIContent, initialStudents } from '@/lib/aiService';
-import { getStudents, updateStudent, addStudent } from '@/lib/studentService';
+import { Student, generateAIContent } from '@/lib/aiService';
+import { useStudents } from '@/hooks/useStudents';
 import { LayoutGrid, Users, Settings, LogOut, Plus, Search } from 'lucide-react';
 
 export default function Home() {
   const [currentCategory, setCurrentCategory] = useState('교과세특');
   const [promptGuideline, setPromptGuideline] = useState('학생의 관찰 내용을 바탕으로 생활기록부에 적합한 문장을 작성해 주세요. 주어(이름)는 생략하고 서술해 주세요.');
-  const [students, setStudents] = useState<Student[]>([]);
+  const { students, isLoading, addStudent, updateStudent } = useStudents();
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
   // Mock "user_01" session
   const userId = 'user_01';
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      const timeoutPromise = new Promise<Student[]>((resolve) => 
-        setTimeout(() => resolve([]), 3000)
-      );
+  // useEffect for fetching is no longer needed as useStudents handles it
 
-      try {
-        const data = await Promise.race([getStudents(), timeoutPromise]);
-        if (data && data.length > 0) {
-          setStudents(data);
-        } else {
-          setStudents(initialStudents);
-        }
-      } catch (err) {
-        setStudents(initialStudents);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
 
   const handleSave = async (id: string, updates: Partial<Student>) => {
     try {
-      await updateStudent(id, updates);
-      setStudents((prev) =>
-        prev.map((s) => (s.id === id ? { ...s, ...updates } : s))
-      );
+      updateStudent(id, updates);
       setSelectedStudent(null);
     } catch (error) {
       alert("데이터 저장 중 오류가 발생했습니다.");
@@ -59,17 +35,24 @@ export default function Home() {
     const name = prompt("학생 이름을 입력하세요:");
     if (!name) return;
     
+    const nextStudentNo = (students.length > 0) 
+      ? (Math.max(...students.map(s => parseInt(s.studentNo) || 0)) + 1).toString()
+      : '10101';
+
     const newStudent: Omit<Student, 'id'> = {
       name,
-      studentNo: (students.length + 10101).toString(),
+      studentNo: nextStudentNo,
+      gender: '남',
+      birthDate: '',
+      phone: '',
+      note: '',
       achievement: '보통',
       teacherNote: '',
       aiOutput: ''
     };
 
     try {
-      const added = await addStudent(newStudent);
-      setStudents(prev => [...prev, added]);
+      addStudent(newStudent);
     } catch (error) {
       alert("학생 추가 중 오류가 발생했습니다.");
     }
@@ -156,7 +139,7 @@ export default function Home() {
             onPromptChange={setPromptGuideline}
           />
 
-          {loading ? (
+          {isLoading ? (
             <div className="flex flex-col items-center justify-center py-32 gap-6">
               <div className="w-12 h-12 border-4 border-[#3182F6]/20 border-t-[#3182F6] rounded-full animate-spin" />
               <p className="text-[16px] font-bold text-[#8B95A1]">데이터를 안전하게 불러오고 있어요</p>

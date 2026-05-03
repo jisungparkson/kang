@@ -1,7 +1,11 @@
 export interface Student {
   id: string;
-  name: string;
   studentNo: string;
+  name: string;
+  gender: string;
+  birthDate: string;
+  phone: string;
+  note: string;
   achievement: string;
   teacherNote: string;
   aiOutput?: string;
@@ -65,7 +69,7 @@ const mockGenerateAIContent = async ({
 };
 
 export const initialStudents: Student[] = [
-  { id: '1', name: '김민수', studentNo: '10101', achievement: '우수', teacherNote: '수학적 직관력이 뛰어나며 창의적인 문제 해결 방식을 보여줌.' },
-  { id: '2', name: '이영희', studentNo: '10102', achievement: '보통', teacherNote: '성실하게 과제를 수행하며 학급 활동에 협조적인 태도를 보임.' },
-  { id: '3', name: '박지성', studentNo: '10103', achievement: '우수', teacherNote: '리더십이 강하고 팀 프로젝트에서 주도적인 역할을 수행함.' },
+  { id: '1', studentNo: '10101', name: '김민수', gender: '남', birthDate: '2008-03-12', phone: '010-1234-5678', note: '학급 회장', achievement: '우수', teacherNote: '수학적 직관력이 뛰어나며 창의적인 문제 해결 방식을 보여줌.', aiOutput: '' },
+  { id: '2', studentNo: '10102', name: '이영희', gender: '여', birthDate: '2008-05-24', phone: '010-2345-6789', note: '-', achievement: '보통', teacherNote: '성실하게 과제를 수행하며 학급 활동에 협조적인 태도를 보임.', aiOutput: '' },
+  { id: '3', studentNo: '10103', name: '박지성', gender: '남', birthDate: '2008-02-11', phone: '010-3456-7890', note: '축구부', achievement: '우수', teacherNote: '리더십이 강하고 팀 프로젝트에서 주도적인 역할을 수행함.', aiOutput: '' },
 ];

@@ -16,37 +16,26 @@ import {
   MoreVertical,
   ClipboardList
 } from 'lucide-react';
+import { useStudents } from '@/hooks/useStudents';
+import { Student } from '@/lib/aiService';
 
-interface ClassStudent {
-  id: string;
-  studentNo: string;
-  name: string;
-  gender: string;
-  birthDate: string;
-  phone: string;
-  note: string;
-}
+// Local interface is no longer needed as we use the unified Student type from lib/aiService
 
-const initialClassStudents: ClassStudent[] = [
-  { id: '1', studentNo: '10101', name: '김민수', gender: '남', birthDate: '2008-03-12', phone: '010-1234-5678', note: '학급 회장' },
-  { id: '2', studentNo: '10102', name: '이영희', gender: '여', birthDate: '2008-05-24', phone: '010-2345-6789', note: '-' },
-  { id: '3', studentNo: '10103', name: '박지성', gender: '남', birthDate: '2008-02-11', phone: '010-3456-7890', note: '축구부' },
-  { id: '4', studentNo: '10104', name: '최유진', gender: '여', birthDate: '2008-11-30', phone: '010-4567-8901', note: '미술 특기자' },
-  { id: '5', studentNo: '10105', name: '정태양', gender: '남', birthDate: '2008-08-15', phone: '010-5678-9012', note: '-' },
-];
 
 export default function ClassesPage() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [students, setStudents] = useState<ClassStudent[]>(initialClassStudents);
+  const { students, addStudent, updateStudent, deleteStudent, bulkAddStudents } = useStudents();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingStudentId, setEditingStudentId] = useState<string | null>(null);
-  const [newStudent, setNewStudent] = useState<Omit<ClassStudent, 'id'>>({
+  const [newStudent, setNewStudent] = useState<Omit<Student, 'id'>>({
     studentNo: '',
     name: '',
     gender: '남',
     birthDate: '',
     phone: '',
-    note: ''
+    note: '',
+    achievement: '보통',
+    teacherNote: '',
   });
   
   const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
@@ -66,12 +55,14 @@ export default function ClassesPage() {
       gender: '남',
       birthDate: '',
       phone: '',
-      note: ''
+      note: '',
+      achievement: '보통',
+      teacherNote: '',
     });
     setIsModalOpen(true);
   };
 
-  const handleOpenEditModal = (student: ClassStudent) => {
+  const handleOpenEditModal = (student: Student) => {
     setEditingStudentId(student.id);
     setNewStudent({
       studentNo: student.studentNo,
@@ -79,14 +70,16 @@ export default function ClassesPage() {
       gender: student.gender,
       birthDate: student.birthDate,
       phone: student.phone,
-      note: student.note
+      note: student.note,
+      achievement: student.achievement || '보통',
+      teacherNote: student.teacherNote || '',
     });
     setIsModalOpen(true);
   };
 
   const handleDeleteStudent = (id: string) => {
     if (window.confirm("정말로 이 학생 데이터를 삭제하시겠습니까?")) {
-      setStudents(students.filter(s => s.id !== id));
+      deleteStudent(id);
     }
   };
 
@@ -98,16 +91,10 @@ export default function ClassesPage() {
     
     if (editingStudentId) {
       // Update
-      setStudents(students.map(s => 
-        s.id === editingStudentId ? { ...newStudent, id: s.id } : s
-      ));
+      updateStudent(editingStudentId, newStudent);
     } else {
       // Add
-      const studentToAdd: ClassStudent = {
-        ...newStudent,
-        id: Math.random().toString(36).substr(2, 9),
-      };
-      setStudents([...students, studentToAdd]);
+      addStudent(newStudent);
     }
 
     setIsModalOpen(false);
@@ -118,7 +105,9 @@ export default function ClassesPage() {
       gender: '남',
       birthDate: '',
       phone: '',
-      note: ''
+      note: '',
+      achievement: '보통',
+      teacherNote: '',
     });
   };
 
@@ -128,26 +117,54 @@ export default function ClassesPage() {
       return;
     }
 
-    const lines = bulkText.trim().split('\n');
-    const newStudentsData: ClassStudent[] = lines.map(line => {
-      const fields = line.split('\t');
-      return {
+    const lines = bulkText.trim().split('\n').filter(line => line.trim() !== '');
+    const hasTabs = bulkText.includes('\t');
+    
+    let newStudentsData: Student[] = [];
+
+    if (!hasTabs) {
+      // Case A: Names Only
+      let lastNo = 0;
+      if (students.length > 0) {
+        const lastStudent = students[students.length - 1];
+        lastNo = parseInt(lastStudent.studentNo.replace(/[^0-9]/g, '')) || 0;
+      }
+
+      newStudentsData = lines.map((name, index) => ({
         id: Math.random().toString(36).substr(2, 9),
-        studentNo: fields[0]?.trim() || '',
-        name: fields[1]?.trim() || '',
-        gender: fields[2]?.trim() || '남',
-        birthDate: fields[3]?.trim() || '',
-        phone: fields[4]?.trim() || '',
-        note: fields[5]?.trim() || ''
-      };
-    }).filter(s => s.studentNo || s.name);
+        studentNo: (lastNo + index + 1).toString(),
+        name: name.trim(),
+        gender: '-',
+        birthDate: '',
+        phone: '',
+        note: '',
+        achievement: '보통',
+        teacherNote: '',
+      }));
+    } else {
+      // Case B: TSV / Excel
+      newStudentsData = lines.map(line => {
+        const fields = line.split('\t');
+        return {
+          id: Math.random().toString(36).substr(2, 9),
+          studentNo: fields[0]?.trim() || '',
+          name: fields[1]?.trim() || '',
+          gender: fields[2]?.trim() || '남',
+          birthDate: fields[3]?.trim() || '',
+          phone: fields[4]?.trim() || '',
+          note: fields[5]?.trim() || '',
+          achievement: '보통',
+          teacherNote: '',
+        };
+      }).filter(s => s.studentNo || s.name);
+    }
 
     if (newStudentsData.length === 0) {
       alert('추가할 학생 데이터가 없습니다. 형식을 확인해 주세요.');
       return;
     }
 
-    setStudents(prev => [...prev, ...newStudentsData]);
+    bulkAddStudents(newStudentsData);
     setBulkText('');
     setIsBulkModalOpen(false);
   };
@@ -424,7 +441,7 @@ export default function ClassesPage() {
             </div>
             
             <p className="text-[15px] text-[#4E5968] mb-6 leading-relaxed bg-[#F9FAFB] p-4 rounded-2xl border border-[#F2F4F6]">
-              <span className="font-bold text-[#3182F6]">💡 안내:</span> 엑셀이나 나이스(NEIS)에서 학생 명단(번호, 이름, 성별 등)을 복사(Ctrl+C)하여 아래에 붙여넣기(Ctrl+V) 하세요.
+              <span className="font-bold text-[#3182F6]">💡 안내:</span> 학생 이름만 한 줄씩 입력하여 빠르게 추가하거나, 엑셀/나이스 표를 그대로 복사해서 붙여넣으세요.
             </p>
             
             <div className="space-y-4">
@@ -436,7 +453,7 @@ export default function ClassesPage() {
                 onChange={(e) => setBulkText(e.target.value)}
               />
               <p className="text-[12px] text-[#ADB5BD] ml-2">
-                * 각 줄은 학생 한 명이며, 각 항목은 탭(Tab)으로 구분되어야 합니다.
+                * 이름만 입력하면 번호가 자동 부여됩니다. 엑셀 데이터는 탭으로 구분됩니다.
               </p>
             </div>
 
