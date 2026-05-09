@@ -7,12 +7,14 @@ import StudentTable from '@/components/StudentTable';
 import EditorDrawer from '@/components/EditorDrawer';
 import { Student, generateAIContent } from '@/lib/aiService';
 import { useStudents } from '@/hooks/useStudents';
+import { useAuth } from '@/context/AuthContext';
 import { LayoutGrid, Users, Settings, LogOut, Plus, Search } from 'lucide-react';
 
 export default function Home() {
   const [currentCategory, setCurrentCategory] = useState('교과세특');
   const [promptGuideline, setPromptGuideline] = useState('학생의 관찰 내용을 바탕으로 생활기록부에 적합한 문장을 작성해 주세요. 주어(이름)는 생략하고 서술해 주세요.');
   const { students, isLoading, addStudent, updateStudent } = useStudents();
+  const { user, logout } = useAuth();
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -90,15 +92,22 @@ export default function Home() {
 
         <div className="pt-8 border-t border-[#F2F4F6] flex items-center justify-between px-2">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-full bg-[#E8F3FF] border border-[#D0E6FF] flex items-center justify-center text-[#3182F6] font-bold text-sm">
-              {userId[0].toUpperCase()}
-            </div>
-            <div>
-              <p className="text-[15px] font-bold text-[#191F28]">테스트 교사</p>
-              <p className="text-[12px] text-[#ADB5BD] font-medium">{userId}</p>
+            {user?.photoURL ? (
+              <img src={user.photoURL} alt="profile" className="w-11 h-11 rounded-full border border-[#D0E6FF]" />
+            ) : (
+              <div className="w-11 h-11 rounded-full bg-[#E8F3FF] border border-[#D0E6FF] flex items-center justify-center text-[#3182F6] font-bold text-sm">
+                {user?.displayName?.[0] || user?.email?.[0]?.toUpperCase() || 'U'}
+              </div>
+            )}
+            <div className="max-w-[120px]">
+              <p className="text-[15px] font-bold text-[#191F28] truncate">{user?.displayName || '테스트 교사'}</p>
+              <p className="text-[12px] text-[#ADB5BD] font-medium truncate">{user?.email}</p>
             </div>
           </div>
-          <button className="p-2.5 text-[#ADB5BD] hover:text-[#F04452] transition-colors bg-[#F9FAFB] rounded-xl hover:bg-[#FFF0F0]">
+          <button 
+            onClick={logout}
+            className="p-2.5 text-[#ADB5BD] hover:text-[#F04452] transition-colors bg-[#F9FAFB] rounded-xl hover:bg-[#FFF0F0]"
+          >
             <LogOut size={18} />
           </button>
         </div>

@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { useStudents } from '@/hooks/useStudents';
 import { Student } from '@/lib/aiService';
+import { useAuth } from '@/context/AuthContext';
 
 // Local interface is no longer needed as we use the unified Student type from lib/aiService
 
@@ -27,6 +28,7 @@ import { Student } from '@/lib/aiService';
 export default function ClassesPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const { students, addStudent, updateStudent, deleteStudent, bulkAddStudents } = useStudents();
+  const { user, logout } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingStudentId, setEditingStudentId] = useState<string | null>(null);
   const [editFormData, setEditFormData] = useState<Omit<Student, 'id'>>({
@@ -237,15 +239,22 @@ export default function ClassesPage() {
 
         <div className="pt-8 border-t border-[#F2F4F6] flex items-center justify-between px-2">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-full bg-[#E8F3FF] border border-[#D0E6FF] flex items-center justify-center text-[#3182F6] font-bold text-sm">
-              {userId[0].toUpperCase()}
-            </div>
-            <div>
-              <p className="text-[15px] font-bold text-[#191F28]">테스트 교사</p>
-              <p className="text-[12px] text-[#ADB5BD] font-medium">{userId}</p>
+            {user?.photoURL ? (
+              <img src={user.photoURL} alt="profile" className="w-11 h-11 rounded-full border border-[#D0E6FF]" />
+            ) : (
+              <div className="w-11 h-11 rounded-full bg-[#E8F3FF] border border-[#D0E6FF] flex items-center justify-center text-[#3182F6] font-bold text-sm">
+                {user?.displayName?.[0] || user?.email?.[0]?.toUpperCase() || 'U'}
+              </div>
+            )}
+            <div className="max-w-[120px]">
+              <p className="text-[15px] font-bold text-[#191F28] truncate">{user?.displayName || '테스트 교사'}</p>
+              <p className="text-[12px] text-[#ADB5BD] font-medium truncate">{user?.email}</p>
             </div>
           </div>
-          <button className="p-2.5 text-[#ADB5BD] hover:text-[#F04452] transition-colors bg-[#F9FAFB] rounded-xl hover:bg-[#FFF0F0]">
+          <button 
+            onClick={logout}
+            className="p-2.5 text-[#ADB5BD] hover:text-[#F04452] transition-colors bg-[#F9FAFB] rounded-xl hover:bg-[#FFF0F0]"
+          >
             <LogOut size={18} />
           </button>
         </div>
@@ -302,7 +311,7 @@ export default function ClassesPage() {
                   <th className="px-6 py-5 text-xs font-bold text-[#8B95A1] uppercase tracking-wider text-center">성별</th>
                   <th className="px-6 py-5 text-xs font-bold text-[#8B95A1] uppercase tracking-wider">생년월일</th>
                   <th className="px-6 py-5 text-xs font-bold text-[#8B95A1] uppercase tracking-wider">연락처</th>
-                  <th className="px-6 py-5 text-xs font-bold text-[#8B95A1] uppercase tracking-wider">특이사항</th>
+                  <th className="px-6 py-5 text-xs font-bold text-[#8B95A1] uppercase tracking-wider">학생 활동</th>
                   <th className="px-6 py-5 text-xs font-bold text-[#8B95A1] uppercase tracking-wider w-24 text-center">관리</th>
                 </tr>
               </thead>

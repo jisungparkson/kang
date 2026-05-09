@@ -42,7 +42,7 @@ export default function StudentTable({ students, onSelectStudent }: StudentTable
                     }} 
                     className="hover:bg-[#F9FAFB] cursor-pointer transition-colors group relative"
                   >
-                    <td className="px-6 py-5 text-sm text-[#8B95A1] font-medium text-center">{idx + 1}</td>
+                    <td className="px-6 py-5 text-sm text-[#8B95A1] font-medium text-center">{student.studentNo}</td>
                     <td className="px-6 py-5">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-[#F2F4F6] flex items-center justify-center text-[#4E5968]">
@@ -51,7 +51,7 @@ export default function StudentTable({ students, onSelectStudent }: StudentTable
                         <span className="font-bold text-[#191F28] text-[15px]">{student.name}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-5 text-sm text-[#4E5968] font-medium">{student.studentNo}</td>
+                    <td className="px-6 py-5 text-sm text-[#4E5968] font-medium">{student.note || '-'}</td>
                     <td className="px-6 py-5 text-center">
                       <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${
                         student.achievement === '우수' 

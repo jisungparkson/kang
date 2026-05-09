@@ -33,7 +33,10 @@ export function useStudents() {
   const addStudent = async (studentData: Omit<Student, 'id'>) => {
     try {
       const newStudent = await addStudentToDB(studentData);
-      setStudents(prev => [...prev, newStudent]);
+      setStudents(prev => {
+        const updated = [...prev, newStudent];
+        return updated.sort((a, b) => Number(a.studentNo) - Number(b.studentNo));
+      });
       return newStudent;
     } catch (error) {
       console.error('Failed to add student:', error);
@@ -44,7 +47,10 @@ export function useStudents() {
   const updateStudent = async (id: string, updates: Partial<Student>) => {
     try {
       await updateStudentInDB(id, updates);
-      setStudents(prev => prev.map(s => (s.id === id ? { ...s, ...updates } : s)));
+      setStudents(prev => {
+        const updated = prev.map(s => (s.id === id ? { ...s, ...updates } : s));
+        return updated.sort((a, b) => Number(a.studentNo) - Number(b.studentNo));
+      });
     } catch (error) {
       console.error('Failed to update student:', error);
       throw error;
@@ -65,7 +71,10 @@ export function useStudents() {
     try {
       // For simplicity using Promise.all, for large datasets writeBatch would be better
       const results = await Promise.all(newStudentsToAdd.map(s => addStudentToDB(s)));
-      setStudents(prev => [...prev, ...results]);
+      setStudents(prev => {
+        const updated = [...prev, ...results];
+        return updated.sort((a, b) => Number(a.studentNo) - Number(b.studentNo));
+      });
     } catch (error) {
       console.error('Failed to bulk add students:', error);
       throw error;

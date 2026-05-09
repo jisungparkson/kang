@@ -6,7 +6,7 @@ const COLLECTION_NAME = 'students';
 
 export const getStudents = async (): Promise<Student[]> => {
   try {
-    const q = query(collection(db, COLLECTION_NAME));
+    const q = query(collection(db, COLLECTION_NAME), orderBy('studentNo', 'asc'));
     const querySnapshot = await getDocs(q);
     
     if (querySnapshot.empty) {
@@ -17,7 +17,7 @@ export const getStudents = async (): Promise<Student[]> => {
           setDoc(doc(db, COLLECTION_NAME, student.id), student)
         )
       );
-      return initialStudents;
+      return initialStudents.sort((a, b) => Number(a.studentNo) - Number(b.studentNo));
     }
 
     const students = querySnapshot.docs.map((doc) => ({
@@ -25,7 +25,8 @@ export const getStudents = async (): Promise<Student[]> => {
       id: doc.id,
     } as Student));
 
-    return students;
+    // Sort numerically in frontend to be safe if studentNo is stored as string
+    return students.sort((a, b) => Number(a.studentNo) - Number(b.studentNo));
   } catch (error) {
     console.error("Error fetching students: ", error);
     // If Firebase fails, we still want the app to be usable with initial data
