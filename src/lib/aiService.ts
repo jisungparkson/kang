@@ -9,6 +9,7 @@ export interface Student {
   achievement: string;
   teacherNote: string;
   aiOutput?: string;
+  tabId?: string | null;
 }
 
 export interface GeneratePromptArgs {

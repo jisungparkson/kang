@@ -9,30 +9,31 @@ import {
   deleteStudent as deleteStudentFromDB 
 } from '@/lib/studentService';
 
-export function useStudents() {
+export function useStudents(tabId?: string) {
   const [students, setStudents] = useState<Student[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchStudents = useCallback(async () => {
     setIsLoading(true);
     try {
-      const data = await getStudents();
+      const data = await getStudents(tabId);
       setStudents(data);
     } catch (error) {
       console.error('Failed to fetch students:', error);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [tabId]);
 
-  // Load from Firebase on mount
+  // Re-fetch when tabId changes
   useEffect(() => {
     fetchStudents();
   }, [fetchStudents]);
 
   const addStudent = async (studentData: Omit<Student, 'id'>) => {
     try {
-      const newStudent = await addStudentToDB(studentData);
+      const dataWithTabId = { ...studentData, tabId: tabId || null };
+      const newStudent = await addStudentToDB(dataWithTabId);
       setStudents(prev => {
         const updated = [...prev, newStudent];
         return updated.sort((a, b) => Number(a.studentNo) - Number(b.studentNo));
@@ -69,8 +70,8 @@ export function useStudents() {
 
   const bulkAddStudents = async (newStudentsToAdd: Omit<Student, 'id'>[]) => {
     try {
-      // For simplicity using Promise.all, for large datasets writeBatch would be better
-      const results = await Promise.all(newStudentsToAdd.map(s => addStudentToDB(s)));
+      const dataWithTabId = newStudentsToAdd.map(s => ({ ...s, tabId: tabId || null }));
+      const results = await Promise.all(dataWithTabId.map(s => addStudentToDB(s)));
       setStudents(prev => {
         const updated = [...prev, ...results];
         return updated.sort((a, b) => Number(a.studentNo) - Number(b.studentNo));

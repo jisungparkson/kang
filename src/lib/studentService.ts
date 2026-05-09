@@ -1,36 +1,55 @@
 import { db } from './firebase';
-import { collection, getDocs, doc, updateDoc, setDoc, query, orderBy, deleteDoc, addDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc, setDoc, query, orderBy, deleteDoc, addDoc, where } from 'firebase/firestore';
 import { Student, initialStudents } from './aiService';
 
 const COLLECTION_NAME = 'students';
 
-export const getStudents = async (): Promise<Student[]> => {
+export const getStudents = async (tabId?: string): Promise<Student[]> => {
   try {
-    const q = query(collection(db, COLLECTION_NAME), orderBy('studentNo', 'asc'));
-    const querySnapshot = await getDocs(q);
+    let q;
     
-    if (querySnapshot.empty) {
+    if (tabId) {
+      // Scoped: only students belonging to this workspace tab
+      q = query(
+        collection(db, COLLECTION_NAME),
+        where('tabId', '==', tabId),
+        orderBy('studentNo', 'asc')
+      );
+    } else {
+      // Global: students without a tabId (master list)
+      q = query(
+        collection(db, COLLECTION_NAME),
+        orderBy('studentNo', 'asc')
+      );
+    }
+
+    const querySnapshot = await getDocs(q);
+
+    // When fetching global list and it's empty, seed initial data
+    if (querySnapshot.empty && !tabId) {
       console.log("No students found, seeding initial data...");
-      // Seed database with initial data if empty
       await Promise.all(
-        initialStudents.map((student) => 
+        initialStudents.map((student) =>
           setDoc(doc(db, COLLECTION_NAME, student.id), student)
         )
       );
       return initialStudents.sort((a, b) => Number(a.studentNo) - Number(b.studentNo));
     }
 
-    const students = querySnapshot.docs.map((doc) => ({
-      ...doc.data(),
-      id: doc.id,
+    let students = querySnapshot.docs.map((d) => ({
+      ...d.data(),
+      id: d.id,
     } as Student));
 
-    // Sort numerically in frontend to be safe if studentNo is stored as string
+    // For global list, filter out students that belong to a workspace tab
+    if (!tabId) {
+      students = students.filter(s => !s.tabId);
+    }
+
     return students.sort((a, b) => Number(a.studentNo) - Number(b.studentNo));
   } catch (error) {
     console.error("Error fetching students: ", error);
-    // If Firebase fails, we still want the app to be usable with initial data
-    return initialStudents;
+    return tabId ? [] : initialStudents;
   }
 };
 
