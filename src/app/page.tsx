@@ -19,8 +19,13 @@ interface WorkspaceTab {
   tabType: TabType;
 }
 
+type MenuType = 'dashboard' | 'management' | 'settings';
+
 export default function Home() {
-  // ── Sidebar / global state (UNCHANGED) ──
+  // ── Sidebar Menu State ──
+  const [currentMenu, setCurrentMenu] = useState<MenuType>('management');
+
+  // ── Global state ──
   const [promptGuideline, setPromptGuideline] = useState(
     '학생의 관찰 내용을 바탕으로 생활기록부에 적합한 문장을 작성해 주세요. 주어(이름)는 생략하고 서술해 주세요.'
   );
@@ -31,9 +36,9 @@ export default function Home() {
 
   // ── Workspace (dynamic tab) state ──
   const [workspaces, setWorkspaces] = useState<WorkspaceTab[]>([
-    { id: '__default__', name: '대시보드', category: '교과세특', tabType: 'dashboard' },
+    { id: 'init_subject', name: '1학기 교과세특', category: '교과세특', tabType: 'subject' },
   ]);
-  const [activeWorkspaceId, setActiveWorkspaceId] = useState('__default__');
+  const [activeWorkspaceId, setActiveWorkspaceId] = useState('init_subject');
 
   // ── Create-tab modal state ──
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -42,8 +47,8 @@ export default function Home() {
 
   const activeWorkspace = workspaces.find(w => w.id === activeWorkspaceId) || workspaces[0];
 
-  // Scoped data: default workspace → global list; others → scoped by tabId
-  const scopedTabId = activeWorkspace.id === '__default__' ? undefined : activeWorkspace.id;
+  // Scoped data: Always scoped by activeWorkspaceId now
+  const scopedTabId = activeWorkspace?.id;
   const { students, isLoading, addStudent, updateStudent } = useStudents(scopedTabId);
 
   // ── Handlers ──
@@ -67,8 +72,11 @@ export default function Home() {
 
   const handleCloseWorkspace = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (id === '__default__') return;
     const next = workspaces.filter(w => w.id !== id);
+    if (next.length === 0) {
+      alert("최소 하나 이상의 작업 공간이 필요합니다.");
+      return;
+    }
     setWorkspaces(next);
     if (activeWorkspaceId === id) setActiveWorkspaceId(next[next.length - 1].id);
   };
@@ -122,7 +130,7 @@ export default function Home() {
   return (
     <div className="flex h-screen bg-[#F2F4F6] text-[#191F28] overflow-hidden font-sans">
       {/* ════════════════════════════════════════════════
-          Sidebar — ORIGINAL, UNTOUCHED
+          Sidebar
          ════════════════════════════════════════════════ */}
       <aside className="w-72 bg-white flex flex-col px-6 py-10 shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-20">
         <div className="flex items-center gap-3 mb-12 px-2">
@@ -133,18 +141,33 @@ export default function Home() {
         </div>
 
         <nav className="flex-1 space-y-2">
-          <Link href="/" className="flex items-center gap-4 px-5 py-4 bg-[#F2F4F6] text-[#3182F6] rounded-2xl font-bold transition-all">
+          <button 
+            onClick={() => setCurrentMenu('dashboard')}
+            className={`w-full flex items-center gap-4 px-5 py-4 rounded-2xl font-bold transition-all ${
+              currentMenu === 'dashboard' ? 'bg-[#F2F4F6] text-[#3182F6]' : 'text-[#8B95A1] hover:text-[#4E5968] hover:bg-[#F9FAFB]'
+            }`}
+          >
             <LayoutGrid size={20} strokeWidth={2.5} />
             <span className="text-[16px]">대시보드</span>
-          </Link>
-          <Link href="/classes" className="flex items-center gap-4 px-5 py-4 text-[#8B95A1] hover:text-[#4E5968] hover:bg-[#F9FAFB] rounded-2xl font-bold transition-all">
+          </button>
+          <button 
+            onClick={() => setCurrentMenu('management')}
+            className={`w-full flex items-center gap-4 px-5 py-4 rounded-2xl font-bold transition-all ${
+              currentMenu === 'management' ? 'bg-[#F2F4F6] text-[#3182F6]' : 'text-[#8B95A1] hover:text-[#4E5968] hover:bg-[#F9FAFB]'
+            }`}
+          >
             <Users size={20} strokeWidth={2} />
             <span className="text-[16px]">학급 관리</span>
-          </Link>
-          <Link href="/settings" className="flex items-center gap-4 px-5 py-4 text-[#8B95A1] hover:text-[#4E5968] hover:bg-[#F9FAFB] rounded-2xl font-bold transition-all">
+          </button>
+          <button 
+            onClick={() => setCurrentMenu('settings')}
+            className={`w-full flex items-center gap-4 px-5 py-4 rounded-2xl font-bold transition-all ${
+              currentMenu === 'settings' ? 'bg-[#F2F4F6] text-[#3182F6]' : 'text-[#8B95A1] hover:text-[#4E5968] hover:bg-[#F9FAFB]'
+            }`}
+          >
             <Settings size={20} strokeWidth={2} />
             <span className="text-[16px]">설정</span>
-          </Link>
+          </button>
         </nav>
 
         <div className="pt-8 border-t border-[#F2F4F6] flex items-center justify-between px-2">
@@ -175,110 +198,174 @@ export default function Home() {
          ════════════════════════════════════════════════ */}
       <main className="flex-1 flex flex-col overflow-hidden relative">
 
-        {/* ── Dynamic Workspace Tab Bar ── */}
-        <div className="bg-white border-b border-[#F2F4F6] px-8 pt-5 flex items-end justify-between">
-          <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide pr-6 max-w-[calc(100%-200px)]">
-            {workspaces.map((ws) => (
-              <button
-                key={ws.id}
-                onClick={() => setActiveWorkspaceId(ws.id)}
-                className={`relative flex items-center gap-2 px-5 py-3.5 rounded-t-2xl text-[14px] font-bold transition-all whitespace-nowrap ${
-                  activeWorkspaceId === ws.id
-                    ? 'text-[#3182F6] bg-[#F2F4F6]/60'
-                    : 'text-[#8B95A1] hover:text-[#4E5968] hover:bg-[#F9FAFB]'
-                }`}
-              >
-                {ws.name}
-                {ws.id !== '__default__' && (
-                  <X
-                    size={14}
-                    className="text-[#ADB5BD] hover:text-[#F04452] transition-colors ml-1"
-                    onClick={(e) => handleCloseWorkspace(ws.id, e)}
-                  />
-                )}
-                {activeWorkspaceId === ws.id && (
-                  <motion.div
-                    layoutId="wsIndicator"
-                    className="absolute bottom-0 left-0 right-0 h-[3px] bg-[#3182F6] rounded-t-full"
-                  />
-                )}
-              </button>
-            ))}
-
-            {/* + button */}
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="w-9 h-9 rounded-full bg-[#F2F4F6] flex items-center justify-center text-[#8B95A1] hover:text-[#3182F6] hover:bg-[#E8F3FF] transition-all mb-2 ml-2 flex-shrink-0"
-            >
-              <Plus size={18} strokeWidth={3} />
-            </button>
-          </div>
-
-          {/* 학생 추가 button */}
-          <div className="pb-3">
-            <button
-              onClick={handleAddStudent}
-              className="flex items-center gap-2 px-6 py-3 bg-[#3182F6] text-white rounded-2xl text-[15px] font-bold hover:bg-[#1B64DA] transition-all shadow-lg shadow-[#3182F6]/20 active:scale-95"
-            >
-              <Plus size={18} strokeWidth={3} />
-              학생 추가
-            </button>
-          </div>
-        </div>
-
-        {/* ── Scrollable content below tabs ── */}
-        <div className="flex-1 overflow-y-auto pb-20 custom-scrollbar scroll-smooth">
-          <Prompter
-            promptGuideline={promptGuideline}
-            onPromptChange={setPromptGuideline}
-          />
-
-          {/* Filter & Search Bar */}
-          <div className="max-w-7xl mx-auto px-6 mb-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-5 rounded-[24px] shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
-              <div className="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0 scrollbar-hide">
-                {(['all', 'completed', 'incomplete'] as const).map((status) => (
+        {currentMenu === 'management' ? (
+          <>
+            {/* ── Dynamic Workspace Tab Bar (ONLY IN MANAGEMENT) ── */}
+            <div className="bg-white border-b border-[#F2F4F6] px-8 pt-5 flex items-end justify-between">
+              <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide pr-6 max-w-[calc(100%-200px)]">
+                {workspaces.map((ws) => (
                   <button
-                    key={status}
-                    onClick={() => setFilterStatus(status)}
-                    className={`px-5 py-2.5 rounded-full text-[14px] font-bold transition-all whitespace-nowrap ${
-                      filterStatus === status
-                        ? 'bg-[#3182F6] text-white shadow-md shadow-[#3182F6]/10'
-                        : 'bg-[#F2F4F6] text-[#8B95A1] hover:bg-[#E5E8EB]'
+                    key={ws.id}
+                    onClick={() => setActiveWorkspaceId(ws.id)}
+                    className={`relative flex items-center gap-2 px-5 py-3.5 rounded-t-2xl text-[14px] font-bold transition-all whitespace-nowrap ${
+                      activeWorkspaceId === ws.id
+                        ? 'text-[#3182F6] bg-[#F2F4F6]/60'
+                        : 'text-[#8B95A1] hover:text-[#4E5968] hover:bg-[#F9FAFB]'
                     }`}
                   >
-                    {status === 'all' ? '전체보기' : status === 'completed' ? '작성 완료' : '미완료'}
+                    {ws.name}
+                    <X
+                      size={14}
+                      className="text-[#ADB5BD] hover:text-[#F04452] transition-colors ml-1"
+                      onClick={(e) => handleCloseWorkspace(ws.id, e)}
+                    />
+                    {activeWorkspaceId === ws.id && (
+                      <motion.div
+                        layoutId="wsIndicator"
+                        className="absolute bottom-0 left-0 right-0 h-[3px] bg-[#3182F6] rounded-t-full"
+                      />
+                    )}
                   </button>
                 ))}
+
+                {/* + button */}
+                <button
+                  onClick={() => setIsModalOpen(true)}
+                  className="w-9 h-9 rounded-full bg-[#F2F4F6] flex items-center justify-center text-[#8B95A1] hover:text-[#3182F6] hover:bg-[#E8F3FF] transition-all mb-2 ml-2 flex-shrink-0"
+                >
+                  <Plus size={18} strokeWidth={3} />
+                </button>
               </div>
 
-              <div className="relative group flex-1 md:max-w-sm">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#ADB5BD] group-focus-within:text-[#3182F6] transition-colors" size={18} />
-                <input
-                  type="text"
-                  placeholder="학생 이름 또는 학번 검색"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-11 pr-6 py-3 bg-[#F2F4F6] border-2 border-transparent rounded-full text-[15px] focus:bg-white focus:border-[#3182F6]/30 focus:ring-4 focus:ring-[#3182F6]/5 outline-none transition-all font-medium text-[#333D4B] placeholder-[#ADB5BD]"
+              {/* 학생 추가 button */}
+              <div className="pb-3">
+                <button
+                  onClick={handleAddStudent}
+                  className="flex items-center gap-2 px-6 py-3 bg-[#3182F6] text-white rounded-2xl text-[15px] font-bold hover:bg-[#1B64DA] transition-all shadow-lg shadow-[#3182F6]/20 active:scale-95"
+                >
+                  <Plus size={18} strokeWidth={3} />
+                  학생 추가
+                </button>
+              </div>
+            </div>
+
+            {/* ── Scrollable content below tabs ── */}
+            <div className="flex-1 overflow-y-auto pb-20 custom-scrollbar scroll-smooth">
+              <Prompter
+                promptGuideline={promptGuideline}
+                onPromptChange={setPromptGuideline}
+              />
+
+              {/* Filter & Search Bar */}
+              <div className="max-w-7xl mx-auto px-6 mb-6">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-5 rounded-[24px] shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
+                  <div className="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0 scrollbar-hide">
+                    {(['all', 'completed', 'incomplete'] as const).map((status) => (
+                      <button
+                        key={status}
+                        onClick={() => setFilterStatus(status)}
+                        className={`px-5 py-2.5 rounded-full text-[14px] font-bold transition-all whitespace-nowrap ${
+                          filterStatus === status
+                            ? 'bg-[#3182F6] text-white shadow-md shadow-[#3182F6]/10'
+                            : 'bg-[#F2F4F6] text-[#8B95A1] hover:bg-[#E5E8EB]'
+                        }`}
+                      >
+                        {status === 'all' ? '전체보기' : status === 'completed' ? '작성 완료' : '미완료'}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="relative group flex-1 md:max-w-sm">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#ADB5BD] group-focus-within:text-[#3182F6] transition-colors" size={18} />
+                    <input
+                      type="text"
+                      placeholder="학생 이름 또는 학번 검색"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full pl-11 pr-6 py-3 bg-[#F2F4F6] border-2 border-transparent rounded-full text-[15px] focus:bg-white focus:border-[#3182F6]/30 focus:ring-4 focus:ring-[#3182F6]/5 outline-none transition-all font-medium text-[#333D4B] placeholder-[#ADB5BD]"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Student Table */}
+              {isLoading ? (
+                <div className="flex flex-col items-center justify-center py-32 gap-6">
+                  <div className="w-12 h-12 border-4 border-[#3182F6]/20 border-t-[#3182F6] rounded-full animate-spin" />
+                  <p className="text-[16px] font-bold text-[#8B95A1]">데이터를 안전하게 불러오고 있어요</p>
+                </div>
+              ) : (
+                <StudentTable
+                  students={filteredStudents}
+                  onSelectStudent={setSelectedStudent}
+                  tabType={activeWorkspace?.tabType}
                 />
+              )}
+            </div>
+          </>
+        ) : currentMenu === 'dashboard' ? (
+          <div className="flex-1 overflow-y-auto p-10 bg-[#F2F4F6]">
+            <div className="max-w-5xl mx-auto space-y-10">
+              <div className="space-y-2">
+                <h1 className="text-3xl font-black text-[#191F28] tracking-tight">대시보드</h1>
+                <p className="text-[#8B95A1] font-medium">학급의 전체 현황을 한눈에 파악하세요.</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-white p-8 rounded-[32px] shadow-[0_4px_24px_rgba(0,0,0,0.02)] border border-white">
+                  <p className="text-[#8B95A1] text-sm font-bold mb-2 uppercase tracking-wider">전체 학생 수</p>
+                  <p className="text-4xl font-black text-[#191F28]">3명</p>
+                </div>
+                <div className="bg-white p-8 rounded-[32px] shadow-[0_4px_24px_rgba(0,0,0,0.02)] border border-white">
+                  <p className="text-[#8B95A1] text-sm font-bold mb-2 uppercase tracking-wider">작성 완료율</p>
+                  <p className="text-4xl font-black text-[#3182F6]">0%</p>
+                </div>
+                <div className="bg-white p-8 rounded-[32px] shadow-[0_4px_24px_rgba(0,0,0,0.02)] border border-white">
+                  <p className="text-[#8B95A1] text-sm font-bold mb-2 uppercase tracking-wider">현재 활성 탭</p>
+                  <p className="text-2xl font-black text-[#191F28] truncate">{workspaces.length}개</p>
+                </div>
+              </div>
+
+              <div className="bg-white p-10 rounded-[40px] shadow-[0_8px_32px_rgba(0,0,0,0.03)] border border-white">
+                <h3 className="text-xl font-bold text-[#191F28] mb-6">최근 작업 공간</h3>
+                <div className="space-y-4">
+                  {workspaces.map(ws => (
+                    <div key={ws.id} className="flex items-center justify-between p-5 hover:bg-[#F9FAFB] rounded-2xl transition-all border border-transparent hover:border-[#F2F4F6] cursor-pointer">
+                      <div className="flex items-center gap-4">
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white ${ws.category === '교과세특' ? 'bg-[#3182F6]' : 'bg-[#F04452]'}`}>
+                          {ws.category === '교과세특' ? '세' : '행'}
+                        </div>
+                        <div>
+                          <p className="font-bold text-[#333D4B]">{ws.name}</p>
+                          <p className="text-xs text-[#8B95A1]">{ws.category}</p>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={() => {
+                          setCurrentMenu('management');
+                          setActiveWorkspaceId(ws.id);
+                        }}
+                        className="text-[#3182F6] font-bold text-sm hover:underline"
+                      >
+                        이동하기
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
-
-          {/* Student Table */}
-          {isLoading ? (
-            <div className="flex flex-col items-center justify-center py-32 gap-6">
-              <div className="w-12 h-12 border-4 border-[#3182F6]/20 border-t-[#3182F6] rounded-full animate-spin" />
-              <p className="text-[16px] font-bold text-[#8B95A1]">데이터를 안전하게 불러오고 있어요</p>
+        ) : (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center space-y-4">
+              <div className="w-16 h-16 bg-[#F2F4F6] rounded-3xl flex items-center justify-center mx-auto text-[#ADB5BD]">
+                <Settings size={32} />
+              </div>
+              <h2 className="text-xl font-bold text-[#191F28]">설정</h2>
+              <p className="text-[#8B95A1]">준비 중인 기능입니다.</p>
             </div>
-          ) : (
-            <StudentTable
-              students={filteredStudents}
-              onSelectStudent={setSelectedStudent}
-              tabType={activeWorkspace.tabType}
-            />
-          )}
-        </div>
+          </div>
+        )}
       </main>
 
       {/* ════════════════════════════════════════════════
@@ -376,7 +463,7 @@ export default function Home() {
         onGenerate={(student) =>
           generateAIContent({
             student,
-            category: activeWorkspace.category === '행발' ? '인성' : '교과세특',
+            category: activeWorkspace?.category === '행발' ? '인성' : '교과세특',
             promptGuideline,
           })
         }
