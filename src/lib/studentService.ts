@@ -4,44 +4,34 @@ import { Student, initialStudents } from './aiService';
 
 const COLLECTION_NAME = 'students';
 
-export const getStudents = async (tabId?: string): Promise<Student[]> => {
+export const getStudents = async (classId?: string, tabId?: string): Promise<Student[]> => {
   try {
-    let q;
-    
+    if (!classId) return []; // Require classId for context
+
+    let q = query(
+      collection(db, COLLECTION_NAME),
+      where('classId', '==', classId),
+      orderBy('studentNo', 'asc')
+    );
+
     if (tabId) {
-      // Scoped: only students belonging to this workspace tab
+      // Scoped: only students belonging to this workspace tab within the class
       q = query(
         collection(db, COLLECTION_NAME),
+        where('classId', '==', classId),
         where('tabId', '==', tabId),
-        orderBy('studentNo', 'asc')
-      );
-    } else {
-      // Global: students without a tabId (master list)
-      q = query(
-        collection(db, COLLECTION_NAME),
         orderBy('studentNo', 'asc')
       );
     }
 
     const querySnapshot = await getDocs(q);
 
-    // When fetching global list and it's empty, seed initial data
-    if (querySnapshot.empty && !tabId) {
-      console.log("No students found, seeding initial data...");
-      await Promise.all(
-        initialStudents.map((student) =>
-          setDoc(doc(db, COLLECTION_NAME, student.id), student)
-        )
-      );
-      return initialStudents.sort((a, b) => Number(a.studentNo) - Number(b.studentNo));
-    }
-
     let students = querySnapshot.docs.map((d) => ({
       ...d.data(),
       id: d.id,
     } as Student));
 
-    // For global list, filter out students that belong to a workspace tab
+    // For global workspace view within a class, filter out students that belong to specific workspace tabs
     if (!tabId) {
       students = students.filter(s => !s.tabId);
     }
@@ -49,7 +39,7 @@ export const getStudents = async (tabId?: string): Promise<Student[]> => {
     return students.sort((a, b) => Number(a.studentNo) - Number(b.studentNo));
   } catch (error) {
     console.error("Error fetching students: ", error);
-    return tabId ? [] : initialStudents;
+    return [];
   }
 };
 

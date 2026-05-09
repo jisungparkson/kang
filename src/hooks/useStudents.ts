@@ -9,31 +9,41 @@ import {
   deleteStudent as deleteStudentFromDB 
 } from '@/lib/studentService';
 
-export function useStudents(tabId?: string) {
+export function useStudents(classId?: string, tabId?: string) {
   const [students, setStudents] = useState<Student[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchStudents = useCallback(async () => {
+    if (!classId) {
+      setStudents([]);
+      setIsLoading(false);
+      return;
+    }
     setIsLoading(true);
     try {
-      const data = await getStudents(tabId);
+      const data = await getStudents(classId, tabId);
       setStudents(data);
     } catch (error) {
       console.error('Failed to fetch students:', error);
     } finally {
       setIsLoading(false);
     }
-  }, [tabId]);
+  }, [classId, tabId]);
 
-  // Re-fetch when tabId changes
+  // Re-fetch when classId or tabId changes
   useEffect(() => {
     fetchStudents();
   }, [fetchStudents]);
 
   const addStudent = async (studentData: Omit<Student, 'id'>) => {
+    if (!classId) throw new Error("Class ID is required to add student");
     try {
-      const dataWithTabId = { ...studentData, tabId: tabId || null };
-      const newStudent = await addStudentToDB(dataWithTabId);
+      const dataWithContext = { 
+        ...studentData, 
+        classId,
+        tabId: tabId || null 
+      };
+      const newStudent = await addStudentToDB(dataWithContext);
       setStudents(prev => {
         const updated = [...prev, newStudent];
         return updated.sort((a, b) => Number(a.studentNo) - Number(b.studentNo));
@@ -69,9 +79,14 @@ export function useStudents(tabId?: string) {
   };
 
   const bulkAddStudents = async (newStudentsToAdd: Omit<Student, 'id'>[]) => {
+    if (!classId) throw new Error("Class ID is required for bulk add");
     try {
-      const dataWithTabId = newStudentsToAdd.map(s => ({ ...s, tabId: tabId || null }));
-      const results = await Promise.all(dataWithTabId.map(s => addStudentToDB(s)));
+      const dataWithContext = newStudentsToAdd.map(s => ({ 
+        ...s, 
+        classId,
+        tabId: tabId || null 
+      }));
+      const results = await Promise.all(dataWithContext.map(s => addStudentToDB(s)));
       setStudents(prev => {
         const updated = [...prev, ...results];
         return updated.sort((a, b) => Number(a.studentNo) - Number(b.studentNo));

@@ -10,6 +10,7 @@ export interface Student {
   teacherNote: string;
   aiOutput?: string;
   tabId?: string | null;
+  classId?: string | null;
 }
 
 export interface GeneratePromptArgs {
