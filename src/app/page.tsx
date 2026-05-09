@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Prompter from '@/components/Prompter';
 import StudentTable, { TabType } from '@/components/StudentTable';
@@ -9,7 +9,7 @@ import { Student, generateAIContent } from '@/lib/aiService';
 import { useStudents } from '@/hooks/useStudents';
 import { useAuth } from '@/context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LayoutGrid, Users, Settings, LogOut, Plus, Search, X } from 'lucide-react';
+import { LayoutGrid, Users, Settings, LogOut, Plus, Search, X, Menu } from 'lucide-react';
 
 // ── Workspace Tab type ──
 interface WorkspaceTab {
@@ -24,6 +24,26 @@ type MenuType = 'dashboard' | 'management' | 'settings';
 export default function Home() {
   // ── Sidebar Menu State ──
   const [currentMenu, setCurrentMenu] = useState<MenuType>('management');
+
+  // ── Sidebar Toggle State ──
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+
+  // Responsive: Close sidebar on mobile by default
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setIsSidebarOpen(false);
+      } else {
+        setIsSidebarOpen(true);
+      }
+    };
+    
+    // Set initial state
+    handleResize();
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // ── Global state ──
   const [promptGuideline, setPromptGuideline] = useState(
@@ -52,6 +72,8 @@ export default function Home() {
   const { students, isLoading, addStudent, updateStudent } = useStudents(scopedTabId);
 
   // ── Handlers ──
+  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+
   const handleCreateWorkspace = () => {
     if (!newTabName.trim()) {
       alert('탭 이름을 입력해주세요.');
@@ -129,18 +151,44 @@ export default function Home() {
   // ── JSX ──
   return (
     <div className="flex h-screen bg-[#F2F4F6] text-[#191F28] overflow-hidden font-sans">
+      {/* ── Mobile Overlay ── */}
+      <AnimatePresence>
+        {isSidebarOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-30 md:hidden"
+            onClick={() => setIsSidebarOpen(false)}
+          />
+        )}
+      </AnimatePresence>
+
       {/* ════════════════════════════════════════════════
           Sidebar
          ════════════════════════════════════════════════ */}
-      <aside className="w-72 bg-white flex flex-col px-6 py-10 shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-20">
-        <div className="flex items-center gap-3 mb-12 px-2">
-          <div className="w-10 h-10 bg-[#3182F6] rounded-[12px] flex items-center justify-center text-white shadow-lg shadow-[#3182F6]/20">
-            <LayoutGrid size={22} strokeWidth={2.5} />
+      <aside className={`bg-white flex flex-col shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-40 transition-all duration-300 ease-in-out overflow-hidden h-full ${
+        isSidebarOpen ? 'w-72 px-6 py-10 opacity-100' : 'w-0 px-0 py-10 opacity-0 pointer-events-none'
+      } fixed md:relative`}>
+        {/* Sidebar Header (Brand + Toggle) */}
+        <div className="flex items-center gap-3 mb-8 px-2 pb-6 border-b border-[#F2F4F6] whitespace-nowrap">
+          <button
+            onClick={toggleSidebar}
+            className="p-2 -ml-1 text-[#8B95A1] hover:bg-gray-100 rounded-full transition-colors flex items-center justify-center"
+            title="메뉴 토글"
+          >
+            <Menu size={24} />
+          </button>
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 bg-[#3182F6] rounded-[10px] flex items-center justify-center text-white shadow-sm">
+              <LayoutGrid size={18} strokeWidth={2.5} />
+            </div>
+            <span className="text-[19px] font-black tracking-tight text-[#191F28]">StudentAI</span>
           </div>
-          <span className="text-2xl font-black tracking-tight text-[#191F28]">StudentAI</span>
         </div>
 
-        <nav className="flex-1 space-y-2">
+        {/* Navigation Section */}
+        <nav className="flex-1 space-y-2 whitespace-nowrap">
           <button 
             onClick={() => setCurrentMenu('dashboard')}
             className={`w-full flex items-center gap-4 px-5 py-4 rounded-2xl font-bold transition-all ${
@@ -170,7 +218,7 @@ export default function Home() {
           </button>
         </nav>
 
-        <div className="pt-8 border-t border-[#F2F4F6] flex items-center justify-between px-2">
+        <div className="pt-8 border-t border-[#F2F4F6] flex items-center justify-between px-2 whitespace-nowrap">
           <div className="flex items-center gap-3">
             {user?.photoURL ? (
               <img src={user.photoURL} alt="profile" className="w-11 h-11 rounded-full border border-[#D0E6FF]" />
@@ -203,6 +251,17 @@ export default function Home() {
             {/* ── Dynamic Workspace Tab Bar (ONLY IN MANAGEMENT) ── */}
             <div className="bg-white border-b border-[#F2F4F6] px-8 pt-5 flex items-end justify-between">
               <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide pr-6 max-w-[calc(100%-200px)]">
+                {/* Re-open Sidebar Button (Hidden when sidebar is open) */}
+                {!isSidebarOpen && (
+                  <button
+                    onClick={toggleSidebar}
+                    className="p-2.5 mr-4 text-[#8B95A1] hover:bg-gray-100 rounded-full transition-colors mb-2 flex-shrink-0"
+                    title="메뉴 열기"
+                  >
+                    <Menu size={24} />
+                  </button>
+                )}
+
                 {workspaces.map((ws) => (
                   <button
                     key={ws.id}
@@ -306,9 +365,22 @@ export default function Home() {
         ) : currentMenu === 'dashboard' ? (
           <div className="flex-1 overflow-y-auto p-10 bg-[#F2F4F6]">
             <div className="max-w-5xl mx-auto space-y-10">
-              <div className="space-y-2">
-                <h1 className="text-3xl font-black text-[#191F28] tracking-tight">대시보드</h1>
-                <p className="text-[#8B95A1] font-medium">학급의 전체 현황을 한눈에 파악하세요.</p>
+              <div className="space-y-4">
+                <div className="flex items-center gap-4">
+                  {/* Re-open Sidebar Button for Dashboard */}
+                  {!isSidebarOpen && (
+                    <button
+                      onClick={toggleSidebar}
+                      className="p-2 text-[#8B95A1] hover:bg-white rounded-full transition-colors flex items-center justify-center shadow-sm"
+                      title="메뉴 열기"
+                    >
+                      <Menu size={24} />
+                    </button>
+                  )}
+                  
+                  <h1 className="text-3xl font-black text-[#191F28] tracking-tight">대시보드</h1>
+                </div>
+                <p className="text-[#8B95A1] font-medium ml-1">학급의 전체 현황을 한눈에 파악하세요.</p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
