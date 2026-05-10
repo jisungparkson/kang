@@ -9,8 +9,8 @@ import { Student, generateAIContent } from '@/lib/aiService';
 import { useStudents } from '@/hooks/useStudents';
 import { useAuth } from '@/context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LayoutGrid, Users, Settings, LogOut, Plus, Search, X, Menu, ChevronRight } from 'lucide-react';
-import { ClassInfo, getClasses, addClass } from '@/lib/classService';
+import { LayoutGrid, Users, Settings, LogOut, Plus, Search, X, Menu, ChevronRight, Trash2 } from 'lucide-react';
+import { ClassInfo, getClasses, addClass, deleteClass } from '@/lib/classService';
 
 // ── Workspace Tab type ──
 interface WorkspaceTab {
@@ -94,6 +94,22 @@ export default function Home() {
       setCurrentMenu('dashboard');
     } catch {
       alert('학급 생성 중 오류가 발생했습니다.');
+    }
+  };
+
+  const handleDeleteClass = async (e: React.MouseEvent, classId: string, className: string) => {
+    e.stopPropagation();
+    if (!confirm(`정말 '${className}'을(를) 삭제하시겠습니까? 학급 내 모든 학생 데이터가 함께 삭제됩니다.`)) {
+      return;
+    }
+    try {
+      await deleteClass(classId);
+      setClasses(prev => prev.filter(c => c.id !== classId));
+      if (activeClassId === classId) {
+        setActiveClassId(null);
+      }
+    } catch {
+      alert('학급 삭제 중 오류가 발생했습니다.');
     }
   };
 
@@ -265,6 +281,15 @@ export default function Home() {
                       onClick={() => { setActiveClassId(cls.id); setCurrentMenu('dashboard'); }}
                       className={`relative group bg-white p-8 rounded-[40px] shadow-[0_8px_30px_rgba(0,0,0,0.02)] border-2 transition-all cursor-pointer ${activeClassId === cls.id ? 'border-[#3182F6] ring-4 ring-[#3182F6]/5' : 'border-transparent hover:border-[#E5E8EB]'}`}
                     >
+                      {/* Delete Button */}
+                      <button
+                        onClick={(e) => handleDeleteClass(e, cls.id, cls.name)}
+                        className="absolute top-6 right-8 p-2 text-[#ADB5BD] hover:text-red-500 hover:bg-red-50 rounded-xl transition-all opacity-0 group-hover:opacity-100"
+                        title="학급 삭제"
+                      >
+                        <Trash2 size={20} />
+                      </button>
+
                       <div className="flex flex-col h-full justify-between">
                         <div>
                           <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 transition-colors ${activeClassId === cls.id ? 'bg-[#3182F6] text-white' : 'bg-[#F2F4F6] text-[#8B95A1] group-hover:bg-[#E8F3FF] group-hover:text-[#3182F6]'}`}>

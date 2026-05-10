@@ -1,7 +1,8 @@
 import { db } from './firebase';
-import { collection, getDocs, doc, setDoc, query, orderBy, addDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, setDoc, query, orderBy, addDoc, deleteDoc, where, writeBatch } from 'firebase/firestore';
 
 const COLLECTION_NAME = 'classes';
+const STUDENTS_COLLECTION = 'students';
 
 export interface ClassInfo {
   id: string;
@@ -38,6 +39,27 @@ export const addClass = async (name: string): Promise<ClassInfo> => {
     return { ...newClass, id: docRef.id };
   } catch (error) {
     console.error("Error adding class: ", error);
+    throw error;
+  }
+};
+
+export const deleteClass = async (classId: string): Promise<void> => {
+  try {
+    // 1. Delete all students in this class
+    const studentsQuery = query(collection(db, STUDENTS_COLLECTION), where('classId', '==', classId));
+    const studentsSnapshot = await getDocs(studentsQuery);
+    
+    const batch = writeBatch(db);
+    studentsSnapshot.docs.forEach((d) => {
+      batch.delete(d.ref);
+    });
+    
+    // 2. Delete the class itself
+    batch.delete(doc(db, COLLECTION_NAME, classId));
+    
+    await batch.commit();
+  } catch (error) {
+    console.error("Error deleting class: ", error);
     throw error;
   }
 };
