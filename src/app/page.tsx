@@ -34,9 +34,9 @@ export default function Home() {
 
   // ── Workspace (dynamic tab) state ──
   const [workspaces, setWorkspaces] = useState<WorkspaceTab[]>([
-    { id: 'init_subject', name: '1학기 교과세특', category: '교과세특', tabType: 'subject' },
+    { id: 'roster', name: '학생 명부', category: '교과세특', tabType: 'roster' },
   ]);
-  const [activeWorkspaceId, setActiveWorkspaceId] = useState('init_subject');
+  const [activeWorkspaceId, setActiveWorkspaceId] = useState('roster');
 
   // ── UI States ──
   const [promptGuideline, setPromptGuideline] = useState(
@@ -79,7 +79,7 @@ export default function Home() {
   const activeClass = classes.find(c => c.id === activeClassId);
 
   // ── Scoped Student Data ──
-  const { students, isLoading, addStudent, updateStudent } = useStudents(activeClassId || undefined, activeWorkspace?.id);
+  const { students, isLoading, addStudent, updateStudent, deleteStudent } = useStudents(activeClassId || undefined, activeWorkspace?.id === 'roster' ? undefined : activeWorkspace?.id);
 
   // ── Handlers ──
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
@@ -92,8 +92,9 @@ export default function Home() {
       setClasses(prev => [newClass, ...prev]);
       setActiveClassId(newClass.id);
       setCurrentMenu('dashboard');
+      setActiveWorkspaceId('roster'); // Reset to roster when changing class
     } catch {
-      alert('학급 생성 중 오류가 발생했습니다.');
+      alert('학급 생성 중 오류 on 발생했습니다.');
     }
   };
 
@@ -145,6 +146,7 @@ export default function Home() {
 
   const handleCloseWorkspace = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    if (id === 'roster') return; // Cannot close roster tab
     const next = workspaces.filter(w => w.id !== id);
     if (next.length === 0) {
       alert("최소 하나 이상의 작업 공간이 필요합니다.");
@@ -177,6 +179,25 @@ export default function Home() {
       await addStudent(newStudent);
     } catch {
       alert('학생 추가 중 오류가 발생했습니다.');
+    }
+  };
+
+  const handleEditStudent = async (id: string, currentName: string) => {
+    const newName = prompt('학생 이름을 수정하세요:', currentName);
+    if (!newName || newName.trim() === '' || newName === currentName) return;
+    try {
+      await updateStudent(id, { name: newName.trim() });
+    } catch {
+      alert('학생 이름 수정 중 오류가 발생했습니다.');
+    }
+  };
+
+  const handleDeleteStudent = async (id: string, name: string) => {
+    if (!confirm(`정말 '${name}' 학생을 삭제하시겠습니까?`)) return;
+    try {
+      await deleteStudent(id);
+    } catch {
+      alert('학생 삭제 중 오류가 발생했습니다.');
     }
   };
 
@@ -246,24 +267,61 @@ export default function Home() {
                 </div>
                 {workspaces.map((ws) => (
                   <button key={ws.id} onClick={() => setActiveWorkspaceId(ws.id)} className={`relative flex items-center gap-2 px-5 py-3.5 rounded-t-2xl text-[14px] font-bold transition-all whitespace-nowrap ${activeWorkspaceId === ws.id ? 'text-[#3182F6] bg-[#F2F4F6]/60' : 'text-[#8B95A1] hover:text-[#4E5968]'}`}>
-                    {ws.name}<X size={14} className="text-[#ADB5BD] hover:text-[#F04452] ml-1" onClick={(e) => handleCloseWorkspace(ws.id, e)} />
+                    {ws.name}
+                    {ws.id !== 'roster' && (
+                      <X size={14} className="text-[#ADB5BD] hover:text-[#F04452] ml-1" onClick={(e) => handleCloseWorkspace(ws.id, e)} />
+                    )}
                     {activeWorkspaceId === ws.id && <motion.div layoutId="wsIndicator" className="absolute bottom-0 left-0 right-0 h-[3px] bg-[#3182F6] rounded-t-full" />}
                   </button>
                 ))}
-                <button onClick={() => setIsTabModalOpen(true)} className="w-9 h-9 rounded-full bg-[#F2F4F6] flex items-center justify-center text-[#8B95A1] hover:text-[#3182F6] mb-2 ml-2 flex-shrink-0"><Plus size={18} /></button>
+                <button onClick={() => setIsTabModalOpen(true)} className="w-9 h-9 rounded-full bg-[#F2F4F6] flex items-center justify-center text-[#8B95A1] hover:text-[#3182F6] mb-2 ml-2 flex-shrink-0 transition-all active:scale-90"><Plus size={18} /></button>
               </div>
-              <div className="pb-3"><button onClick={handleAddStudent} className="flex items-center gap-2 px-6 py-3 bg-[#3182F6] text-white rounded-2xl text-[15px] font-bold hover:bg-[#1B64DA] shadow-lg shadow-[#3182F6]/20 active:scale-95"><Plus size={18} strokeWidth={3} />학생 추가</button></div>
+              
+              {activeWorkspaceId === 'roster' && (
+                <div className="pb-3">
+                  <button onClick={handleAddStudent} className="flex items-center gap-2 px-6 py-3.5 bg-[#3182F6] text-white rounded-2xl text-[15px] font-black hover:bg-[#1B64DA] shadow-lg shadow-[#3182F6]/20 active:scale-95 transition-all">
+                    <Plus size={20} strokeWidth={3} />
+                    학생 추가하기
+                  </button>
+                </div>
+              )}
             </div>
 
             <div className="flex-1 overflow-y-auto pb-20 custom-scrollbar scroll-smooth">
-              <Prompter promptGuideline={promptGuideline} onPromptChange={setPromptGuideline} />
-              <div className="max-w-7xl mx-auto px-6 mb-6">
+              {activeWorkspaceId !== 'roster' && (
+                <Prompter promptGuideline={promptGuideline} onPromptChange={setPromptGuideline} />
+              )}
+              
+              <div className="max-w-7xl mx-auto px-6 mb-6 mt-6">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-5 rounded-[24px] shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
-                  <div className="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0 scrollbar-hide">{(['all', 'completed', 'incomplete'] as const).map((status) => (<button key={status} onClick={() => setFilterStatus(status)} className={`px-5 py-2.5 rounded-full text-[14px] font-bold transition-all whitespace-nowrap ${filterStatus === status ? 'bg-[#3182F6] text-white' : 'bg-[#F2F4F6] text-[#8B95A1] hover:bg-[#E5E8EB]'}`}>{status === 'all' ? '전체보기' : status === 'completed' ? '작성 완료' : '미완료'}</button>))}</div>
-                  <div className="relative group flex-1 md:max-w-sm"><Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#ADB5BD]" size={18} /><input type="text" placeholder="이름 또는 학번 검색" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-11 pr-6 py-3 bg-[#F2F4F6] border-2 border-transparent rounded-full focus:bg-white focus:border-[#3182F6]/30 outline-none font-medium" /></div>
+                  <div className="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0 scrollbar-hide">
+                    {(['all', 'completed', 'incomplete'] as const).map((status) => (
+                      <button key={status} onClick={() => setFilterStatus(status)} className={`px-5 py-2.5 rounded-full text-[14px] font-bold transition-all whitespace-nowrap ${filterStatus === status ? 'bg-[#3182F6] text-white' : 'bg-[#F2F4F6] text-[#8B95A1] hover:bg-[#E5E8EB]'}`}>
+                        {status === 'all' ? '전체보기' : status === 'completed' ? '작성 완료' : '미완료'}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="relative group flex-1 md:max-w-sm">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#ADB5BD]" size={18} />
+                    <input type="text" placeholder="이름 또는 학번 검색" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-11 pr-6 py-3 bg-[#F2F4F6] border-2 border-transparent rounded-full focus:bg-white focus:border-[#3182F6]/30 outline-none font-medium transition-all" />
+                  </div>
                 </div>
               </div>
-              {isLoading ? (<div className="flex flex-col items-center justify-center py-32 gap-6"><div className="w-12 h-12 border-4 border-[#3182F6]/20 border-t-[#3182F6] rounded-full animate-spin" /><p className="text-[16px] font-bold text-[#8B95A1]">데이터를 안전하게 불러오고 있어요</p></div>) : (<StudentTable students={filteredStudents} onSelectStudent={setSelectedStudent} tabType={activeWorkspace?.tabType} />)}
+              
+              {isLoading ? (
+                <div className="flex flex-col items-center justify-center py-32 gap-6">
+                  <div className="w-12 h-12 border-4 border-[#3182F6]/20 border-t-[#3182F6] rounded-full animate-spin" />
+                  <p className="text-[16px] font-bold text-[#8B95A1]">데이터를 안전하게 불러오고 있어요</p>
+                </div>
+              ) : (
+                <StudentTable 
+                  students={filteredStudents} 
+                  onSelectStudent={setSelectedStudent} 
+                  onDeleteStudent={handleDeleteStudent}
+                  onEditStudent={handleEditStudent}
+                  tabType={activeWorkspace?.tabType} 
+                />
+              )}
             </div>
           </>
         ) : currentMenu === 'management' ? (

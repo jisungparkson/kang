@@ -2,19 +2,31 @@
 
 import { Student } from '@/lib/aiService';
 import { calculateBytes } from '@/lib/utils';
-import { User, Activity, FileText, ChevronRight } from 'lucide-react';
+import { User, Activity, FileText, ChevronRight, Trash2, Pencil } from 'lucide-react';
 
-export type TabType = 'dashboard' | 'management' | 'behavior' | 'subject';
+export type TabType = 'dashboard' | 'management' | 'behavior' | 'subject' | 'roster';
 
 interface StudentTableProps {
   students: Student[];
   onSelectStudent: (student: Student) => void;
+  onDeleteStudent?: (id: string, name: string) => void;
+  onEditStudent?: (id: string, name: string) => void;
   tabType?: TabType;
 }
 
-export default function StudentTable({ students, onSelectStudent, tabType = 'dashboard' }: StudentTableProps) {
+export default function StudentTable({ 
+  students, 
+  onSelectStudent, 
+  onDeleteStudent, 
+  onEditStudent, 
+  tabType = 'dashboard' 
+}: StudentTableProps) {
   const getHeaders = () => {
     switch (tabType) {
+      case 'roster':
+        return (
+          <th className="px-6 py-5 text-xs font-bold text-[#8B95A1] uppercase tracking-wider text-center">관리</th>
+        );
       case 'behavior':
         return (
           <>
@@ -50,6 +62,33 @@ export default function StudentTable({ students, onSelectStudent, tabType = 'das
   const getRowContent = (student: Student) => {
     const bytes = calculateBytes(student.aiOutput || '');
     switch (tabType) {
+      case 'roster':
+        return (
+          <td className="px-6 py-5 text-center">
+            <div className="flex items-center justify-center gap-2">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEditStudent?.(student.id, student.name);
+                }}
+                className="p-2 text-[#ADB5BD] hover:text-[#3182F6] hover:bg-blue-50 rounded-lg transition-all"
+                title="이름 수정"
+              >
+                <Pencil size={16} />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDeleteStudent?.(student.id, student.name);
+                }}
+                className="p-2 text-[#ADB5BD] hover:text-[#F04452] hover:bg-red-50 rounded-lg transition-all"
+                title="학생 삭제"
+              >
+                <Trash2 size={16} />
+              </button>
+            </div>
+          </td>
+        );
       case 'behavior':
         return (
           <>
@@ -162,7 +201,7 @@ export default function StudentTable({ students, onSelectStudent, tabType = 'das
     }
   };
 
-  const colCount = tabType === 'dashboard' ? 7 : 6;
+  const colCount = tabType === 'dashboard' ? 7 : tabType === 'roster' ? 3 : 6;
 
   return (
     <div className="max-w-7xl mx-auto px-6">
