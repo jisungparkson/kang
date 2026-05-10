@@ -241,8 +241,8 @@ export default function Home() {
             <div className="bg-white border-b border-[#F2F4F6] px-8 pt-5 flex items-end justify-between">
               <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide pr-6 max-w-[calc(100%-200px)]">
                 {!isSidebarOpen && <button onClick={toggleSidebar} className="p-2.5 mr-4 text-[#8B95A1] hover:bg-gray-100 rounded-full mb-2 flex-shrink-0"><Menu size={24} /></button>}
-                <div className="flex items-center gap-3 mb-3.5 mr-6 px-3 py-1.5 bg-[#F2F4F6] rounded-xl flex-shrink-0">
-                  <span className="text-[14px] font-bold text-[#3182F6]">{activeClass?.name || '학급 선택 필요'}</span>
+                <div className="flex items-center gap-3 mb-3.5 mr-6 px-4 py-2 bg-blue-50 border border-blue-100 shadow-sm rounded-xl flex-shrink-0">
+                  <span className="text-lg font-black text-[#3182F6]">{activeClass?.name || '학급 선택 필요'}</span>
                 </div>
                 {workspaces.map((ws) => (
                   <button key={ws.id} onClick={() => setActiveWorkspaceId(ws.id)} className={`relative flex items-center gap-2 px-5 py-3.5 rounded-t-2xl text-[14px] font-bold transition-all whitespace-nowrap ${activeWorkspaceId === ws.id ? 'text-[#3182F6] bg-[#F2F4F6]/60' : 'text-[#8B95A1] hover:text-[#4E5968]'}`}>
