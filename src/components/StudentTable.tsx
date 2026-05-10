@@ -9,8 +9,8 @@ export type TabType = 'dashboard' | 'management' | 'behavior' | 'subject' | 'ros
 interface StudentTableProps {
   students: Student[];
   onSelectStudent: (student: Student) => void;
-  onDeleteStudent?: (id: string, name: string) => void;
-  onEditStudent?: (id: string, name: string) => void;
+  onDeleteStudent?: (id: string) => void;
+  onEditStudent?: (student: Student) => void;
   tabType?: TabType;
 }
 
@@ -23,6 +23,7 @@ export default function StudentTable({
 }: StudentTableProps) {
   const getHeaders = () => {
     switch (tabType) {
+      case 'management':
       case 'roster':
         return (
           <th className="px-6 py-5 text-xs font-bold text-[#8B95A1] uppercase tracking-wider text-center">관리</th>
@@ -62,6 +63,7 @@ export default function StudentTable({
   const getRowContent = (student: Student) => {
     const bytes = calculateBytes(student.aiOutput || '');
     switch (tabType) {
+      case 'management':
       case 'roster':
         return (
           <td className="px-6 py-5 text-center">
@@ -69,17 +71,17 @@ export default function StudentTable({
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  onEditStudent?.(student.id, student.name);
+                  onEditStudent?.(student);
                 }}
                 className="p-2 text-[#ADB5BD] hover:text-[#3182F6] hover:bg-blue-50 rounded-lg transition-all"
-                title="이름 수정"
+                title="학생 수정"
               >
                 <Pencil size={16} />
               </button>
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  onDeleteStudent?.(student.id, student.name);
+                  onDeleteStudent?.(student.id);
                 }}
                 className="p-2 text-[#ADB5BD] hover:text-[#F04452] hover:bg-red-50 rounded-lg transition-all"
                 title="학생 삭제"

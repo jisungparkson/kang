@@ -35,7 +35,7 @@ export default function Home() {
 
   // ── Workspace (dynamic tab) state ──
   const [workspaces, setWorkspaces] = useState<WorkspaceTab[]>([
-    { id: 'roster', name: '학생 명부', category: '교과세특', tabType: 'roster' },
+    { id: 'roster', name: '학생 명부', category: '교과세특', tabType: 'management' },
   ]);
   const [activeWorkspaceId, setActiveWorkspaceId] = useState('roster');
 
@@ -192,20 +192,28 @@ export default function Home() {
     setToast({ message: `성공적으로 ${parsedStudents.length}명의 학생이 추가되었습니다.`, type: 'success' });
   };
 
-  const handleEditStudent = async (id: string, currentName: string) => {
-    const newName = prompt('학생 이름을 수정하세요:', currentName);
-    if (!newName || newName.trim() === '' || newName === currentName) return;
+  const handleEditStudent = async (student: Student) => {
+    const newNo = prompt('새로운 출석 번호를 입력하세요:', student.studentNo);
+    if (newNo === null) return;
+    const newName = prompt('새로운 이름을 입력하세요:', student.name);
+    if (!newName || newName.trim() === '') return;
+    
     try {
-      await updateStudent(id, { name: newName.trim() });
+      await updateStudent(student.id, { studentNo: newNo.trim(), name: newName.trim() });
+      setToast({ message: '학생 정보가 수정되었습니다.', type: 'success' });
     } catch {
-      alert('학생 이름 수정 중 오류가 발생했습니다.');
+      alert('학생 정보 수정 중 오류가 발생했습니다.');
     }
   };
 
-  const handleDeleteStudent = async (id: string, name: string) => {
-    if (!confirm(`정말 '${name}' 학생을 삭제하시겠습니까?`)) return;
+  const handleDeleteStudent = async (id: string) => {
+    const student = students.find(s => s.id === id);
+    if (!student) return;
+    
+    if (!confirm(`정말 '${student.name}' 학생을 삭제하시겠습니까?`)) return;
     try {
       await deleteStudent(id);
+      setToast({ message: '학생이 삭제되었습니다.', type: 'success' });
     } catch {
       alert('학생 삭제 중 오류가 발생했습니다.');
     }
