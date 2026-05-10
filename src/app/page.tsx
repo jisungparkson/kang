@@ -9,8 +9,9 @@ import { Student, generateAIContent } from '@/lib/aiService';
 import { useStudents } from '@/hooks/useStudents';
 import { useAuth } from '@/context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LayoutGrid, Users, Settings, LogOut, Plus, Search, X, Menu, ChevronRight, Trash2, Pencil } from 'lucide-react';
+import { LayoutGrid, Users, Settings, LogOut, Plus, Search, X, Menu, ChevronRight, Trash2, Pencil, CheckCircle } from 'lucide-react';
 import { ClassInfo, getClasses, addClass, deleteClass, updateClassName } from '@/lib/classService';
+import StudentAddModal from '@/components/StudentAddModal';
 
 // ── Workspace Tab type ──
 interface WorkspaceTab {
@@ -47,8 +48,18 @@ export default function Home() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'completed' | 'incomplete'>('all');
   const [isTabModalOpen, setIsTabModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newTabName, setNewTabName] = useState('');
   const [newTabCategory, setNewTabCategory] = useState<'교과세특' | '행발'>('교과세특');
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+
+  // Toast auto-hide
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => setToast(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
 
   // ── Fetch Classes ──
   useEffect(() => {
@@ -79,7 +90,7 @@ export default function Home() {
   const activeClass = classes.find(c => c.id === activeClassId);
 
   // ── Scoped Student Data ──
-  const { students, isLoading, addStudent, updateStudent, deleteStudent } = useStudents(activeClassId || undefined, activeWorkspace?.id === 'roster' ? undefined : activeWorkspace?.id);
+  const { students, isLoading, addStudent, updateStudent, deleteStudent, bulkAddStudents } = useStudents(activeClassId || undefined, activeWorkspace?.id === 'roster' ? undefined : activeWorkspace?.id);
 
   // ── Handlers ──
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
@@ -156,17 +167,15 @@ export default function Home() {
     if (activeWorkspaceId === id) setActiveWorkspaceId(next[next.length - 1].id);
   };
 
-  const handleAddStudent = async () => {
+  const handleAddStudent = () => {
     if (!activeClassId) return alert('학급을 먼저 선택해주세요.');
-    const name = prompt('학생 이름을 입력하세요:');
-    if (!name) return;
-    const nextStudentNo =
-      students.length > 0
-        ? (Math.max(...students.map(s => parseInt(s.studentNo) || 0)) + 1).toString()
-        : '10101';
-    const newStudent: Omit<Student, 'id'> = {
+    setIsAddModalOpen(true);
+  };
+
+  const handleIndividualAdd = async (studentNo: string, name: string) => {
+    await addStudent({
+      studentNo,
       name,
-      studentNo: nextStudentNo,
       gender: '남',
       birthDate: '',
       phone: '',
@@ -174,12 +183,13 @@ export default function Home() {
       achievement: '보통',
       teacherNote: '',
       aiOutput: '',
-    };
-    try {
-      await addStudent(newStudent);
-    } catch {
-      alert('학생 추가 중 오류가 발생했습니다.');
-    }
+    });
+    setToast({ message: `${name} 학생이 추가되었습니다.`, type: 'success' });
+  };
+
+  const handleBulkAdd = async (parsedStudents: { studentNo: string; name: string }[]) => {
+    await bulkAddStudents(parsedStudents);
+    setToast({ message: `성공적으로 ${parsedStudents.length}명의 학생이 추가되었습니다.`, type: 'success' });
   };
 
   const handleEditStudent = async (id: string, currentName: string) => {
@@ -411,6 +421,27 @@ export default function Home() {
               </div>
             </motion.div>
           </div>
+        )}
+      </AnimatePresence>
+
+      <StudentAddModal 
+        isOpen={isAddModalOpen} 
+        onClose={() => setIsAddModalOpen(false)} 
+        onAddIndividual={handleIndividualAdd}
+        onAddBulk={handleBulkAdd}
+      />
+
+      <AnimatePresence>
+        {toast && (
+          <motion.div 
+            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.9 }}
+            className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[200] flex items-center gap-3 px-8 py-4 bg-[#191F28] text-white rounded-full shadow-2xl"
+          >
+            <CheckCircle className="text-[#3182F6]" size={20} />
+            <span className="text-[15px] font-bold">{toast.message}</span>
+          </motion.div>
         )}
       </AnimatePresence>
 

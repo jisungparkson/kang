@@ -1,5 +1,5 @@
 import { db } from './firebase';
-import { collection, getDocs, doc, updateDoc, setDoc, query, orderBy, deleteDoc, addDoc, where } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc, setDoc, query, orderBy, deleteDoc, addDoc, where, writeBatch } from 'firebase/firestore';
 import { Student, initialStudents } from './aiService';
 
 const COLLECTION_NAME = 'students';
@@ -65,6 +65,34 @@ export const updateStudent = async (studentId: string, updates: Partial<Student>
 
 export const updateStudentAIOutput = async (studentId: string, aiOutput: string): Promise<void> => {
   return updateStudent(studentId, { aiOutput });
+};
+
+export const addStudentsBulk = async (classId: string, students: { studentNo: string, name: string }[]): Promise<void> => {
+  try {
+    const batch = writeBatch(db);
+    const studentsCol = collection(db, COLLECTION_NAME);
+
+    students.forEach((s) => {
+      const newDocRef = doc(studentsCol);
+      batch.set(newDocRef, {
+        ...s,
+        classId,
+        gender: '남',
+        birthDate: '',
+        phone: '',
+        note: '',
+        achievement: '보통',
+        teacherNote: '',
+        aiOutput: '',
+        createdAt: Date.now(),
+      });
+    });
+
+    await batch.commit();
+  } catch (error) {
+    console.error("Error adding students bulk: ", error);
+    throw error;
+  }
 };
 
 export const deleteStudent = async (studentId: string): Promise<void> => {

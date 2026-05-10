@@ -6,7 +6,8 @@ import {
   getStudents, 
   addStudent as addStudentToDB, 
   updateStudent as updateStudentInDB, 
-  deleteStudent as deleteStudentFromDB 
+  deleteStudent as deleteStudentFromDB,
+  addStudentsBulk as addStudentsBulkToDB
 } from '@/lib/studentService';
 
 export function useStudents(classId?: string, tabId?: string) {
@@ -78,19 +79,11 @@ export function useStudents(classId?: string, tabId?: string) {
     }
   };
 
-  const bulkAddStudents = async (newStudentsToAdd: Omit<Student, 'id'>[]) => {
+  const bulkAddStudents = async (newStudentsToAdd: { studentNo: string, name: string }[]) => {
     if (!classId) throw new Error("Class ID is required for bulk add");
     try {
-      const dataWithContext = newStudentsToAdd.map(s => ({ 
-        ...s, 
-        classId,
-        tabId: tabId || null 
-      }));
-      const results = await Promise.all(dataWithContext.map(s => addStudentToDB(s)));
-      setStudents(prev => {
-        const updated = [...prev, ...results];
-        return updated.sort((a, b) => Number(a.studentNo) - Number(b.studentNo));
-      });
+      await addStudentsBulkToDB(classId, newStudentsToAdd);
+      await fetchStudents();
     } catch (error) {
       console.error('Failed to bulk add students:', error);
       throw error;
