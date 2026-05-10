@@ -1,5 +1,5 @@
 import { db } from './firebase';
-import { collection, getDocs, doc, setDoc, query, orderBy, addDoc, deleteDoc, where, writeBatch } from 'firebase/firestore';
+import { collection, getDocs, doc, setDoc, query, orderBy, addDoc, deleteDoc, where, writeBatch, updateDoc } from 'firebase/firestore';
 
 const COLLECTION_NAME = 'classes';
 const STUDENTS_COLLECTION = 'students';
@@ -39,6 +39,16 @@ export const addClass = async (name: string): Promise<ClassInfo> => {
     return { ...newClass, id: docRef.id };
   } catch (error) {
     console.error("Error adding class: ", error);
+    throw error;
+  }
+};
+
+export const updateClassName = async (classId: string, newName: string): Promise<void> => {
+  try {
+    const classRef = doc(db, COLLECTION_NAME, classId);
+    await updateDoc(classRef, { name: newName });
+  } catch (error) {
+    console.error("Error updating class name: ", error);
     throw error;
   }
 };
